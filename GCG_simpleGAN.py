@@ -51,33 +51,44 @@ print("done.", flush=True)
 
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
 batch_size = 32
+n_epochs = 3
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
 if not os.path.exists("temp_project/" + gan_model.name):
-    print("Folder '{}'".format(gan_model.name), "has not been found: training the model", end=' ')
+    print("Folder '{}'".format(gan_model.name), "has not been found: training the model over", n_epochs, "epochs.")
+    gan_model.save("temp_project\\" + gan_model.name)
+    # training
+    for epoch in range(n_epochs):
+        print("Epoch number", epoch + 1, " of", n_epochs, flush=True)
+        for x_batch in tqdm(dataset, unit='batch', total=int(x_train.shape[0] / batch_size)):
+            # train the discriminator
+            noise = tf.random.normal(shape=[batch_size, img_shape[0], img_shape[1]])
+            fake_images = generator_model(noise)
+            x_tot = tf.concat([fake_images, x_batch], axis=0)
+            y1 = tf.constant([[0.]] * batch_size + [[1.]] * batch_size)
+            discriminator_model.trainable = True
+            discriminator_model.train_on_batch(x_tot, y1)
 
+            # train the generator
+            noise = tf.random.normal(shape=[batch_size, img_shape[0], img_shape[1]])
+            y2 = tf.constant([[1.]] * batch_size)
+            discriminator_model.trainable = False
+            gan_model.train_on_batch(noise, y2)
 
-    def train_gan(gan, dataset, batch_size, codings_shape, n_epochs=50):
-        generator_model, discriminator_model = gan.layers
-        for epoch in range(n_epochs):
-            for x_batch in tqdm(dataset, unit='batch', total=int(x_train.shape[0] / batch_size)):
-                # train the discriminator
-                noise = tf.random.normal(shape=[batch_size, codings_shape[0], codings_shape[1]])
-                fake_images = generator_model(noise)
-                x_tot = tf.concat([fake_images, x_batch], axis=0)
-                y1 = tf.constant([[0.]] * batch_size + [[1.]] * batch_size)
-                discriminator_model.trainable = True
-                discriminator_model.train_on_batch(x_tot, y1)
-
-                # train the generator
-                noise = tf.random.normal(shape=[batch_size, codings_shape[0], codings_shape[1]])
-                y2 = tf.constant([[1.]] * batch_size)
-                discriminator_model.trainable = False
-                gan.train_on_batch(noise, y2)
-
-    n_epochs = 50
-    print("over", n_epochs, "epochs.")
-    train_gan(gan_model, dataset, batch_size, img_shape, n_epochs)
+        # save a sample at the end of each epoch
+        noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
+        fake_images = generator_model(noise)
+        # plot images
+        for i in range(25):
+            # define subplot
+            plt.subplot(5, 5, 1 + i)
+            plt.axis('off')
+            plt.imshow(fake_images[i], cmap='gray_r')
+        if not os.path.isdir("temp_project/" + gan_model.name + "/trainimages/"):
+            os.makedirs("temp_project/" + gan_model.name + "/trainimages/")
+        plt.savefig("temp_project/" + gan_model.name + "/train_images/train_epoch_{}".format(epoch + 1))
+        plt.close('all')
+    print("Training complete. Saving the model.")
     gan_model.save("temp_project\\" + gan_model.name)
 else:
     print("Folder '{}'".format(gan_model.name), "has been found: no need to retrain.")
