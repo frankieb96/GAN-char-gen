@@ -54,7 +54,7 @@ batch_size = 32
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
 if not os.path.exists("temp_project/" + gan_model.name):
-    print("Folder '{}'".format(gan_model.name), "has not been found: training the model...")
+    print("Folder '{}'".format(gan_model.name), "has not been found: training the model", end=' ')
 
 
     def train_gan(gan, dataset, batch_size, codings_shape, n_epochs=50):
@@ -75,15 +75,21 @@ if not os.path.exists("temp_project/" + gan_model.name):
                 discriminator_model.trainable = False
                 gan.train_on_batch(noise, y2)
 
-
-    train_gan(gan_model, dataset, batch_size, img_shape, n_epochs=1)
+    n_epochs = 50
+    print("over", n_epochs, "epochs.")
+    train_gan(gan_model, dataset, batch_size, img_shape, n_epochs)
     gan_model.save("temp_project\\" + gan_model.name)
 else:
     print("Folder '{}'".format(gan_model.name), "has been found: no need to retrain.")
     gan_model = tf.keras.models.load_model("temp_project\\" + gan_model.name)
 
 """ SEE RESULTS """
-noise = tf.random.normal(shape=[batch_size, img_shape[0], img_shape[1]])
+noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
 fake_images = generator_model(noise)
-
-# see the results
+# plot images
+for i in range(25):
+    # define subplot
+    plt.subplot(5, 5, 1 + i)
+    plt.axis('off')
+    plt.imshow(fake_images[i], cmap='gray_r')
+plt.show()  # see the results
