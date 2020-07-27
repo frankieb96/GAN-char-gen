@@ -51,7 +51,7 @@ print("done.", flush=True)
 
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
 batch_size = 32
-n_epochs = 3
+n_epochs = 50
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
 if not os.path.exists("temp_project/" + gan_model.name):
