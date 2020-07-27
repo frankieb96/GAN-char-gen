@@ -59,7 +59,7 @@ if not os.path.exists("temp_project/" + gan_model.name):
     gan_model.save("temp_project\\" + gan_model.name)
     # training
     for epoch in range(n_epochs):
-        print("Epoch number", epoch + 1, " of", n_epochs, flush=True)
+        print("Epoch number", epoch + 1, "of", n_epochs, flush=True)
         for x_batch in tqdm(dataset, unit='batch', total=int(x_train.shape[0] / batch_size)):
             # train the discriminator
             noise = tf.random.normal(shape=[batch_size, img_shape[0], img_shape[1]])
@@ -84,14 +84,15 @@ if not os.path.exists("temp_project/" + gan_model.name):
             plt.subplot(5, 5, 1 + i)
             plt.axis('off')
             plt.imshow(fake_images[i], cmap='gray_r')
-        if not os.path.isdir("temp_project/" + gan_model.name + "/trainimages/"):
-            os.makedirs("temp_project/" + gan_model.name + "/trainimages/")
+        if not os.path.isdir("temp_project/" + gan_model.name + "/train_images/"):
+            os.makedirs("temp_project/" + gan_model.name + "/train_images/")
         plt.savefig("temp_project/" + gan_model.name + "/train_images/train_epoch_{}".format(epoch + 1))
         plt.close('all')
-    print("Training complete. Saving the model.")
+    print("Training complete. Saving the model...", end=' ')
     gan_model.save("temp_project\\" + gan_model.name)
+    print("done.")
 else:
-    print("Folder '{}'".format(gan_model.name), "has been found: no need to retrain.")
+    print("Folder '{}'".format(gan_model.name), "has been found: loading model, no need to retrain.")
     gan_model = tf.keras.models.load_model("temp_project\\" + gan_model.name)
 
 """ SEE RESULTS """
