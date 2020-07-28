@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import GCG_models
 from tqdm import tqdm
 
+tf.random.set_seed(1)
+
 """ LOADING DATASET """
 print("\nLoading MNIST dataset...", end=' ')
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
@@ -51,12 +53,15 @@ print("done.", flush=True)
 
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
 batch_size = 32
-n_epochs = 50
+n_epochs = 5
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
 if not os.path.exists("temp_project/" + gan_model.name):
     print("Folder '{}'".format(gan_model.name), "has not been found: training the model over", n_epochs, "epochs.")
-    gan_model.save("temp_project\\" + gan_model.name)
+    os.makedirs("temp_project/" + gan_model.name)
+    os.makedirs("temp_project/" + gan_model.name + "/" + discriminator_model.name)
+    os.makedirs("temp_project/" + gan_model.name + "/" + generator_model.name)
+
     # training
     for epoch in range(n_epochs):
         print("Epoch number", epoch + 1, "of", n_epochs, flush=True)
@@ -89,19 +94,24 @@ if not os.path.exists("temp_project/" + gan_model.name):
         plt.savefig("temp_project/" + gan_model.name + "/train_images/train_epoch_{}".format(epoch + 1))
         plt.close('all')
     print("Training complete. Saving the model...", end=' ')
-    gan_model.save("temp_project\\" + gan_model.name)
+    generator_model.save("temp_project\\" + gan_model.name + "\\" + generator_model.name)
+    discriminator_model.save("temp_project\\" + gan_model.name + "\\" + discriminator_model.name)
     print("done.")
 else:
     print("Folder '{}'".format(gan_model.name), "has been found: loading model, no need to retrain.")
-    gan_model = tf.keras.models.load_model("temp_project\\" + gan_model.name)
+    generator_model = tf.keras.models.load_model("temp_project\\" + gan_model.name + "\\" + generator_model.name)
+    discriminator_model = tf.keras.models.load_model("temp_project\\" + gan_model.name + "\\" + discriminator_model.name)
+    gan_model = tf.keras.models.Sequential([generator_model, discriminator_model], name="SimpleGAN")
 
 """ SEE RESULTS """
-noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
-fake_images = generator_model(noise)
 # plot images
-for i in range(25):
-    # define subplot
-    plt.subplot(5, 5, 1 + i)
-    plt.axis('off')
-    plt.imshow(fake_images[i], cmap='gray_r')
-plt.show()  # see the results
+for i in range(5):
+    noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
+    fake_images = generator_model(noise)
+    for i in range(25):
+        # define subplot
+        plt.subplot(5, 5, 1 + i)
+        plt.axis('off')
+        plt.imshow(fake_images[i], cmap='gray_r')
+    plt.show()  # see the results
+    plt.close('all')

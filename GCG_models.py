@@ -3,7 +3,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 
-def simpleGAN_build_generator(input_shape):
+def simpleGAN_build_generator(input_shape, name='SimpleGAN_generator'):
     """
     # TODO write pydocs
 
@@ -26,11 +26,11 @@ def simpleGAN_build_generator(input_shape):
     layers = tf.keras.layers.Dense(img_len, activation='tanh') (layers)
     layers = tf.keras.layers.Reshape((28, 28)) (layers)
 
-    model = tf.keras.models.Model(layer_input, layers)
+    model = tf.keras.models.Model(layer_input, layers, name=name)
     return model
 
 
-def simpleGAN_build_discriminator(img_shape):
+def simpleGAN_build_discriminator(img_shape, name='SimpleGAN_discriminator'):
     """
     # TODO write pydocs
 
@@ -54,5 +54,5 @@ def simpleGAN_build_discriminator(img_shape):
     tf.keras.layers.BatchNormalization() (layers)
     layers = tf.keras.layers.Dense(1, activation='sigmoid') (layers)
 
-    model = tf.keras.models.Model(layer_input, layers)
+    model = tf.keras.models.Model(layer_input, layers, name=name)
     return model
