@@ -1,5 +1,4 @@
 import os
-
 from tabulate import tabulate
 import numpy as np
 import tensorflow as tf
