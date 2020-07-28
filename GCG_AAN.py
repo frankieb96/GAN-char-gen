@@ -61,15 +61,15 @@ print("done.", flush=True)
 
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
 batch_size = 32
-n_epochs = 5
+n_epochs = 10
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
-if not os.path.exists("temp_project/AAN"):
-    print("Folder 'AAN' has not been found: training the model over", n_epochs, "epochs.")
-    os.makedirs("temp_project/AAN")
-    os.makedirs("temp_project/AAN" + "/" + discriminator_model.name)
-    os.makedirs("temp_project/AAN" + "/" + encoder_model.name)
-    os.makedirs("temp_project/AAN" + "/" + decoder_model.name)
+if not os.path.exists("temp_project/AAE"):
+    print("Folder 'AAE' has not been found: training the model over", n_epochs, "epochs.")
+    os.makedirs("temp_project/AAE")
+    os.makedirs("temp_project/AAE" + "/" + discriminator_model.name)
+    os.makedirs("temp_project/AAE" + "/" + encoder_model.name)
+    os.makedirs("temp_project/AAE" + "/" + decoder_model.name)
 
     # training
     for epoch in range(n_epochs):
@@ -104,21 +104,21 @@ if not os.path.exists("temp_project/AAN"):
             plt.subplot(5, 5, 1 + i)
             plt.axis('off')
             plt.imshow(latent_real[i].reshape(28, 28), cmap='gray_r')
-        if not os.path.isdir("temp_project/ANN/train_images/"):
-            os.makedirs("temp_project/ANN/train_images/")
-        plt.savefig("temp_project/ANN/train_images/train_epoch_{}".format(epoch + 1))
+        if not os.path.isdir("temp_project/AAE/train_images/"):
+            os.makedirs("temp_project/AAE/train_images/")
+        plt.savefig("temp_project/AAE/train_images/train_epoch_{}".format(epoch + 1))
         plt.close('all')
     print("Training complete. Saving the model...", end=' ')
-    discriminator_model.save("temp_project\\ANN\\" + discriminator_model.name)
-    encoder_model.save("temp_project\\ANN\\" + encoder_model.name)
-    decoder_model.save("temp_project\\ANN\\" + decoder_model.name)
+    discriminator_model.save("temp_project\\AAE\\" + discriminator_model.name)
+    encoder_model.save("temp_project\\AAE\\" + encoder_model.name)
+    decoder_model.save("temp_project\\AAE\\" + decoder_model.name)
     print("done.")
 else:
     print("Folder 'AAN' has been found: loading model, no need to retrain.")
-    discriminator_model = tf.keras.models.load_model("temp_project\\ANN\\" + discriminator_model.name)
-    encoder_model = tf.keras.models.load_model("temp_project\\ANN\\" + encoder_model.name)
-    decoder_model = tf.keras.models.load_model("temp_project\\ANN\\" + decoder_model.name)
-    autoencoder_model = tf.keras.models.Sequential([encoder_model, discriminator_model], name='AAE_autoencoder')
+    discriminator_model = tf.keras.models.load_model("temp_project\\AAE\\" + discriminator_model.name)
+    encoder_model = tf.keras.models.load_model("temp_project\\AAE\\" + encoder_model.name)
+    decoder_model = tf.keras.models.load_model("temp_project\\AAE\\" + decoder_model.name)
+    autoencoder_model = tf.keras.models.Sequential([encoder_model, decoder_model], name='AAE_autoencoder')
     encoder_discriminator_model = tf.keras.models.Sequential([encoder_model, discriminator_model],
                                                              name='AAE_encoder_discriminator')
 
@@ -132,6 +132,6 @@ for i in range(5):
         # define subplot
         plt.subplot(5, 5, 1 + i)
         plt.axis('off')
-        plt.imshow(latent_real[i].reshape(28, 28), cmap='gray_r')
+        plt.imshow(latent_real[i].reshape((28, 28)), cmap='gray_r')
     plt.show()  # see the results
     plt.close('all')
