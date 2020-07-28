@@ -3,7 +3,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 
-def simpleGAN_build_generator(latent_dimension, name='SimpleGAN_generator', img_side=28):
+def simpleGAN_build_generator(latent_dimension=100, name='SimpleGAN_generator', img_side=28):
     """
     # TODO write pydocs
 
@@ -28,7 +28,7 @@ def simpleGAN_build_generator(latent_dimension, name='SimpleGAN_generator', img_
     return model
 
 
-def simpleGAN_build_discriminator(img_shape, name='SimpleGAN_discriminator'):
+def simpleGAN_build_discriminator(img_shape=(28, 28), name='SimpleGAN_discriminator'):
     """
     # TODO write pydocs
 
@@ -56,7 +56,7 @@ def simpleGAN_build_discriminator(img_shape, name='SimpleGAN_discriminator'):
     return model
 
 
-def DCGAN_build_generator(latent_dimension, name='DCGAN_generator', img_side=28):
+def DCGAN_build_generator(latent_dimension=100, name='DCGAN_generator'):
     """
     # TODO write pydocs
 
@@ -79,7 +79,7 @@ def DCGAN_build_generator(latent_dimension, name='DCGAN_generator', img_side=28)
     return model
 
 
-def DCGAN_build_discriminator(img_shape, name='DCGAN_discriminator'):
+def DCGAN_build_discriminator(img_shape=(28, 28, 1), name='DCGAN_discriminator'):
     """
     # TODO write pydocs
 
@@ -96,4 +96,51 @@ def DCGAN_build_discriminator(img_shape, name='DCGAN_discriminator'):
     layers = tf.keras.layers.Flatten()(layers)
     layers = tf.keras.layers.Dense(1, activation='sigmoid')(layers)
     model = tf.keras.models.Model(layer_input, layers, name=name)
+    return model
+
+
+def AAE_build_encoder(img_shape=(28, 28), latent_dim=100, name='AAE_encoder'):
+    input_layer = tf.keras.Input(img_shape)
+
+    layers = tf.keras.layers.Flatten()(input_layer)
+    layers = tf.keras.layers.Dense(512)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(512)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(2 * latent_dim)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+
+    model = tf.keras.Model(input_layer, layers, name=name)
+    return model
+
+
+def AAE_build_decoder(latent_dim=100, img_side=28, name='AAE_decoder'):
+    input_layer = tf.keras.Input(latent_dim)
+
+    layers = tf.keras.layers.Flatten()(input_layer)
+    layers = tf.keras.layers.Dense(512)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(512)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(img_side ** 2)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Reshape((img_side, img_side))(layers)
+    layers = tf.keras.layers.Activation('tanh')(layers)
+
+    model = tf.keras.Model(input_layer, layers, name=name)
+    return model
+
+
+def AAE_build_discriminator(latent_dim=100, name='AAE_discriminator'):
+    input_layer = tf.keras.Input(latent_dim)
+
+    layers = tf.keras.layers.Flatten()(input_layer)
+    layers = tf.keras.layers.Dense(512)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(256)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(1)(layers)
+    layers = tf.keras.layers.Activation('sigmoid')(layers)
+
+    model = tf.keras.Model(input_layer, layers, name=name)
     return model
