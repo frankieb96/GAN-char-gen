@@ -96,7 +96,7 @@ if not os.path.exists("temp_project/AAN"):
             encoder_discriminator_model.train_on_batch(x_batch, y2)
 
         # save a sample at the end of each epoch
-        noise = tf.random.normal(shape=[25, latent_dimension])
+        noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
         latent_real = autoencoder_model(noise).numpy()
         # plot images
         for i in range(25):
@@ -125,7 +125,7 @@ else:
 """ SEE RESULTS """
 # plot images
 for i in range(5):
-    noise = tf.random.normal(shape=[25, latent_dimension])
+    noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
     latent_real = autoencoder_model(noise).numpy()
     # plot images
     for i in range(25):
