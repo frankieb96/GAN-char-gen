@@ -3,15 +3,14 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 
-def simpleGAN_build_generator(input_shape, name='SimpleGAN_generator'):
+def simpleGAN_build_generator(latent_dimension, name='SimpleGAN_generator', img_side=28):
     """
     # TODO write pydocs
 
-    :param input_shape:
+    :param latent_dimension:
     :return:
     """
-    img_len = input_shape[0]*input_shape[1]
-    layer_input = tf.keras.Input(input_shape)
+    layer_input = tf.keras.Input(latent_dimension)
 
     layers = tf.keras.layers.Flatten() (layer_input)
     layers = tf.keras.layers.Dense(256) (layers)
@@ -23,8 +22,8 @@ def simpleGAN_build_generator(input_shape, name='SimpleGAN_generator'):
     layers = tf.keras.layers.Dense(1024) (layers)
     layers = tf.keras.layers.LeakyReLU(alpha=0.2) (layers)
     layers = tf.keras.layers.BatchNormalization() (layers)
-    layers = tf.keras.layers.Dense(img_len, activation='tanh') (layers)
-    layers = tf.keras.layers.Reshape((28, 28)) (layers)
+    layers = tf.keras.layers.Dense(img_side**2, activation='tanh') (layers)
+    layers = tf.keras.layers.Reshape((img_side, img_side)) (layers)
 
     model = tf.keras.models.Model(layer_input, layers, name=name)
     return model

@@ -8,6 +8,7 @@ import GCG_models
 from tqdm import tqdm
 
 tf.random.set_seed(1)
+latent_dimension = 100
 
 """ LOADING DATASET """
 print("\nLoading MNIST dataset...", end=' ')
@@ -35,7 +36,7 @@ print("")
 
 """ BUILDING THE MODELS """
 print("Building the GAN models...", end=' ')
-generator_model = GCG_models.simpleGAN_build_generator(img_shape)
+generator_model = GCG_models.simpleGAN_build_generator(latent_dimension)
 discriminator_model = GCG_models.simpleGAN_build_discriminator(img_shape)
 gan_model = tf.keras.models.Sequential([generator_model, discriminator_model], name='SimpleGAN')
 
@@ -67,7 +68,7 @@ if not os.path.exists("temp_project/" + gan_model.name):
         print("Epoch number", epoch + 1, "of", n_epochs, flush=True)
         for x_batch in tqdm(dataset, unit='batch', total=int(x_train.shape[0] / batch_size)):
             # train the discriminator
-            noise = tf.random.normal(shape=[batch_size, img_shape[0], img_shape[1]])
+            noise = tf.random.normal(shape=[batch_size, latent_dimension])
             fake_images = generator_model(noise)
             x_tot = tf.concat([fake_images, x_batch], axis=0)
             y1 = tf.constant([[0.]] * batch_size + [[1.]] * batch_size)
@@ -75,13 +76,13 @@ if not os.path.exists("temp_project/" + gan_model.name):
             discriminator_model.train_on_batch(x_tot, y1)
 
             # train the generator
-            noise = tf.random.normal(shape=[batch_size, img_shape[0], img_shape[1]])
+            noise = tf.random.normal(shape=[batch_size, latent_dimension])
             y2 = tf.constant([[1.]] * batch_size)
             discriminator_model.trainable = False
             gan_model.train_on_batch(noise, y2)
 
         # save a sample at the end of each epoch
-        noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
+        noise = tf.random.normal(shape=[25, latent_dimension])
         fake_images = generator_model(noise)
         # plot images
         for i in range(25):
@@ -106,7 +107,7 @@ else:
 """ SEE RESULTS """
 # plot images
 for i in range(5):
-    noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
+    noise = tf.random.normal(shape=[25, latent_dimension])
     fake_images = generator_model(noise)
     for i in range(25):
         # define subplot
