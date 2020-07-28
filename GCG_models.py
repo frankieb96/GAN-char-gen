@@ -107,15 +107,16 @@ def AAE_build_encoder(img_shape=(28, 28), latent_dim=100, name='AAE_encoder'):
     layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
     layers = tf.keras.layers.Dense(512)(layers)
     layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
-    layers = tf.keras.layers.Dense(2 * latent_dim)(layers)
+    layers = tf.keras.layers.Dense(latent_dim)(layers)
     layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
 
     model = tf.keras.Model(input_layer, layers, name=name)
     return model
 
 
-def AAE_build_decoder(latent_dim=100, img_side=28, name='AAE_decoder'):
+def AAE_build_decoder(img_shape=(28, 28), latent_dim=100, name='AAE_decoder'):
     input_layer = tf.keras.Input(latent_dim)
+    img_side = img_shape[0]
 
     layers = tf.keras.layers.Flatten()(input_layer)
     layers = tf.keras.layers.Dense(512)(layers)
@@ -124,8 +125,8 @@ def AAE_build_decoder(latent_dim=100, img_side=28, name='AAE_decoder'):
     layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
     layers = tf.keras.layers.Dense(img_side ** 2)(layers)
     layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
-    layers = tf.keras.layers.Reshape((img_side, img_side))(layers)
     layers = tf.keras.layers.Activation('tanh')(layers)
+    layers = tf.keras.layers.Reshape((img_side, img_side))(layers)
 
     model = tf.keras.Model(input_layer, layers, name=name)
     return model

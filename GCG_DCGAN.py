@@ -39,7 +39,7 @@ print("Building the GAN models...", end=' ')
 img_shape = (28, 28, 1)
 generator_model = GCG_models.DCGAN_build_generator(latent_dimension)
 discriminator_model = GCG_models.DCGAN_build_discriminator(img_shape)
-gan_model = tf.keras.models.Sequential([generator_model, discriminator_model], name='DCGAN')
+dcgan_model = tf.keras.models.Sequential([generator_model, discriminator_model], name='DCGAN')
 
 discriminator_model.compile(
     optimizer='adam',
@@ -47,7 +47,7 @@ discriminator_model.compile(
 )
 discriminator_model.trainable = False
 
-gan_model.compile(
+dcgan_model.compile(
     optimizer='adam',
     loss='binary_crossentropy'
 )
@@ -58,11 +58,11 @@ batch_size = 32
 n_epochs = 5
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
-if not os.path.exists("temp_project/" + gan_model.name):
-    print("Folder '{}'".format(gan_model.name), "has not been found: training the model over", n_epochs, "epochs.")
-    os.makedirs("temp_project/" + gan_model.name)
-    os.makedirs("temp_project/" + gan_model.name + "/" + discriminator_model.name)
-    os.makedirs("temp_project/" + gan_model.name + "/" + generator_model.name)
+if not os.path.exists("temp_project/" + dcgan_model.name):
+    print("Folder '{}'".format(dcgan_model.name), "has not been found: training the model over", n_epochs, "epochs.")
+    os.makedirs("temp_project/" + dcgan_model.name)
+    os.makedirs("temp_project/" + dcgan_model.name + "/" + discriminator_model.name)
+    os.makedirs("temp_project/" + dcgan_model.name + "/" + generator_model.name)
 
     # training
     for epoch in range(n_epochs):
@@ -75,12 +75,12 @@ if not os.path.exists("temp_project/" + gan_model.name):
             y1 = tf.constant([[0.]] * batch_size + [[1.]] * batch_size)
             discriminator_model.trainable = True
             discriminator_model.train_on_batch(x_tot, y1)
+            discriminator_model.trainable = False
 
             # train the generator
             noise = tf.random.normal(shape=[batch_size, latent_dimension])
             y2 = tf.constant([[1.]] * batch_size)
-            discriminator_model.trainable = False
-            gan_model.train_on_batch(noise, y2)
+            dcgan_model.train_on_batch(noise, y2)
 
         # save a sample at the end of each epoch
         noise = tf.random.normal(shape=[25, latent_dimension])
@@ -91,20 +91,20 @@ if not os.path.exists("temp_project/" + gan_model.name):
             plt.subplot(5, 5, 1 + i)
             plt.axis('off')
             plt.imshow(fake_images[i].reshape(28, 28), cmap='gray_r')
-        if not os.path.isdir("temp_project/" + gan_model.name + "/train_images/"):
-            os.makedirs("temp_project/" + gan_model.name + "/train_images/")
-        plt.savefig("temp_project/" + gan_model.name + "/train_images/train_epoch_{}".format(epoch + 1))
+        if not os.path.isdir("temp_project/" + dcgan_model.name + "/train_images/"):
+            os.makedirs("temp_project/" + dcgan_model.name + "/train_images/")
+        plt.savefig("temp_project/" + dcgan_model.name + "/train_images/train_epoch_{}".format(epoch + 1))
         plt.close('all')
     print("Training complete. Saving the model...", end=' ')
-    generator_model.save("temp_project\\" + gan_model.name + "\\" + generator_model.name)
-    discriminator_model.save("temp_project\\" + gan_model.name + "\\" + discriminator_model.name)
+    generator_model.save("temp_project\\" + dcgan_model.name + "\\" + generator_model.name)
+    discriminator_model.save("temp_project\\" + dcgan_model.name + "\\" + discriminator_model.name)
     print("done.")
 else:
-    print("Folder '{}'".format(gan_model.name), "has been found: loading model, no need to retrain.")
-    generator_model = tf.keras.models.load_model("temp_project\\" + gan_model.name + "\\" + generator_model.name)
+    print("Folder '{}'".format(dcgan_model.name), "has been found: loading model, no need to retrain.")
+    generator_model = tf.keras.models.load_model("temp_project\\" + dcgan_model.name + "\\" + generator_model.name)
     discriminator_model = tf.keras.models.load_model(
-        "temp_project\\" + gan_model.name + "\\" + discriminator_model.name)
-    gan_model = tf.keras.models.Sequential([generator_model, discriminator_model], name="SimpleGAN")
+        "temp_project\\" + dcgan_model.name + "\\" + discriminator_model.name)
+    dcgan_model = tf.keras.models.Sequential([generator_model, discriminator_model], name="SimpleGAN")
 
 """ SEE RESULTS """
 # plot images

@@ -73,11 +73,11 @@ if not os.path.exists("temp_project/" + gan_model.name):
             y1 = tf.constant([[0.]] * batch_size + [[1.]] * batch_size)
             discriminator_model.trainable = True
             discriminator_model.train_on_batch(x_tot, y1)
+            discriminator_model.trainable = False
 
             # train the generator
             noise = tf.random.normal(shape=[batch_size, latent_dimension])
             y2 = tf.constant([[1.]] * batch_size)
-            discriminator_model.trainable = False
             gan_model.train_on_batch(noise, y2)
 
         # save a sample at the end of each epoch
