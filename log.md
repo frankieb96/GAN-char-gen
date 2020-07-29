@@ -28,3 +28,9 @@ Also, some useful links:
 > - https://github.com/NeilNie/EMNIST-Keras
 > - https://github.com/christianversloot/extra_keras_datasets
 > - https://www.kaggle.com/hojjatk/read-mnist-dataset
+
+
+29/07/2020 08:47
+-----------------------------------------------------------------------------------------------------------------------
+Praise the Lord, and StackOverflow even more!
+> https://stackoverflow.com/questions/51125969/loading-emnist-letters-dataset
