@@ -15,13 +15,12 @@ latent_dimension = 100
 def AAE_build_encoder(img_shape=(28, 28), latent_dim=100, name='AAE_encoder'):
     input_layer = tf.keras.Input(img_shape)
 
-    layers = tf.keras.layers.Flatten()(input_layer)
-    layers = tf.keras.layers.Dense(512)(layers)
-    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
-    layers = tf.keras.layers.Dense(512)(layers)
-    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Reshape((img_shape[0], img_shape[1], 1))(input_layer)
+    layers = tf.keras.layers.Conv2D(16, kernel_size=(5,5), strides=1, activation='relu', padding='same')(layers)
+    layers = tf.keras.layers.Conv2D(32, kernel_size=(5,5), strides=2, activation='relu', padding='same')(layers)
+    layers = tf.keras.layers.Conv2D(2, kernel_size=(3,3), strides=1, activation='relu', padding='same')(layers)
+    layers = tf.keras.layers.Flatten()(layers)
     layers = tf.keras.layers.Dense(latent_dim)(layers)
-    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
 
     model = tf.keras.Model(input_layer, layers, name=name)
     return model
@@ -31,15 +30,13 @@ def AAE_build_decoder(img_shape=(28, 28), latent_dim=100, name='AAE_decoder'):
     input_layer = tf.keras.Input(latent_dim)
     img_side = img_shape[0]
 
-    layers = tf.keras.layers.Flatten()(input_layer)
-    layers = tf.keras.layers.Dense(512)(layers)
-    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
-    layers = tf.keras.layers.Dense(512)(layers)
-    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
-    layers = tf.keras.layers.Dense(img_side ** 2)(layers)
-    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
-    layers = tf.keras.layers.Activation('tanh')(layers)
-    layers = tf.keras.layers.Reshape((img_side, img_side))(layers)
+    layers = tf.keras.layers.Dense(14*14)(input_layer)
+    layers = tf.keras.layers.Reshape([14,14,1])(layers)
+    layers = tf.keras.layers.Conv2DTranspose(16, kernel_size=(3,3), strides=1, activation='relu', padding='same')(layers)
+    layers = tf.keras.layers.Conv2DTranspose(32, kernel_size=(5,5), strides=2, activation='relu', padding='same')(layers)
+    layers = tf.keras.layers.Conv2DTranspose(1, kernel_size=(5,5), strides=1, activation='relu', padding='same')(layers)
+    layers = tf.keras.layers.Reshape([28,28])(layers)
+
 
     model = tf.keras.Model(input_layer, layers, name=name)
     return model
@@ -64,7 +61,7 @@ def AAE_build_discriminator(latent_dim=100, name='AAE_discriminator'):
 DATA_TYPE = "emnist-letters"
 PROJECT_FOLDER = "temp_project/EMINST_AAE/"
 
-print("Loading data {}".format(DATA_TYPE), end=' ')
+print("Loading data {}...".format(DATA_TYPE), end=' ')
 mat = loadmat("temp_project/matlab/{}.mat".format(DATA_TYPE))
 data = mat['dataset']
 x_train = data['train'][0, 0]['images'][0, 0]
@@ -123,6 +120,7 @@ encoder_discriminator_model.compile(
     loss='binary_crossentropy'
 )
 print("done.", flush=True)
+
 
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
 batch_size = 32
