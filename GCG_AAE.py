@@ -33,7 +33,7 @@ print(tabulate(table, headers=headers))
 print("")
 
 """ BUILDING THE MODELS """
-print("Building the GAN models...", end=' ')
+print("Building the AAE model...", end=' ')
 img_shape = (28, 28)
 latent_dimension = 10
 encoder_model = GCG_models.AAE_build_encoder(img_shape, latent_dimension)
