@@ -16,9 +16,9 @@ def AAE_build_encoder(img_shape=(28, 28), latent_dim=100, name='AAE_encoder'):
     input_layer = tf.keras.Input(img_shape)
 
     layers = tf.keras.layers.Reshape((img_shape[0], img_shape[1], 1))(input_layer)
-    layers = tf.keras.layers.Conv2D(16, kernel_size=(5,5), strides=1, activation='relu', padding='same')(layers)
-    layers = tf.keras.layers.Conv2D(32, kernel_size=(5,5), strides=2, activation='relu', padding='same')(layers)
-    layers = tf.keras.layers.Conv2D(2, kernel_size=(3,3), strides=1, activation='relu', padding='same')(layers)
+    layers = tf.keras.layers.Conv2D(16, kernel_size=(3,3), strides=1, activation='elu', padding='same')(layers)
+    layers = tf.keras.layers.Conv2D(32, kernel_size=(3,3), strides=2, activation='elu', padding='same')(layers)
+    layers = tf.keras.layers.Conv2D(2, kernel_size=(3,3), strides=1, activation='elu', padding='same')(layers)
     layers = tf.keras.layers.Flatten()(layers)
     layers = tf.keras.layers.Dense(latent_dim)(layers)
 
@@ -32,9 +32,9 @@ def AAE_build_decoder(img_shape=(28, 28), latent_dim=100, name='AAE_decoder'):
 
     layers = tf.keras.layers.Dense(14*14)(input_layer)
     layers = tf.keras.layers.Reshape([14,14,1])(layers)
-    layers = tf.keras.layers.Conv2DTranspose(16, kernel_size=(3,3), strides=1, activation='relu', padding='same')(layers)
-    layers = tf.keras.layers.Conv2DTranspose(32, kernel_size=(5,5), strides=2, activation='relu', padding='same')(layers)
-    layers = tf.keras.layers.Conv2DTranspose(1, kernel_size=(5,5), strides=1, activation='relu', padding='same')(layers)
+    layers = tf.keras.layers.Conv2DTranspose(16, kernel_size=(3,3), strides=1, activation='elu', padding='same')(layers)
+    layers = tf.keras.layers.Conv2DTranspose(32, kernel_size=(3,3), strides=2, activation='elu', padding='same')(layers)
+    layers = tf.keras.layers.Conv2DTranspose(1, kernel_size=(3,3), strides=1, activation='elu', padding='same')(layers)
     layers = tf.keras.layers.Reshape([28,28])(layers)
 
 
@@ -96,7 +96,7 @@ print("")
 """ BUILDING THE MODELS """
 print("Building the AAE model...", end=' ')
 img_shape = (28, 28)
-latent_dimension = 10
+latent_dimension = 30
 encoder_model = AAE_build_encoder(img_shape, latent_dimension)
 decoder_model = AAE_build_decoder(img_shape, latent_dimension)
 discriminator_model = AAE_build_discriminator(latent_dimension)
@@ -124,7 +124,7 @@ print("done.", flush=True)
 
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
 batch_size = 32
-n_epochs = 1
+n_epochs = 10
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
 if not os.path.exists(PROJECT_FOLDER):
