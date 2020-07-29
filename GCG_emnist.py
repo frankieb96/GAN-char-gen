@@ -10,6 +10,57 @@ from tqdm import tqdm
 tf.random.set_seed(1)
 latent_dimension = 100
 
+""" ENCODER/DECODER/DISCRIMINATOR MODEL CREATOR FUNCTIONS """
+
+def AAE_build_encoder(img_shape=(28, 28), latent_dim=100, name='AAE_encoder'):
+    input_layer = tf.keras.Input(img_shape)
+
+    layers = tf.keras.layers.Flatten()(input_layer)
+    layers = tf.keras.layers.Dense(512)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(512)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(latent_dim)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+
+    model = tf.keras.Model(input_layer, layers, name=name)
+    return model
+
+
+def AAE_build_decoder(img_shape=(28, 28), latent_dim=100, name='AAE_decoder'):
+    input_layer = tf.keras.Input(latent_dim)
+    img_side = img_shape[0]
+
+    layers = tf.keras.layers.Flatten()(input_layer)
+    layers = tf.keras.layers.Dense(512)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(512)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(img_side ** 2)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Activation('tanh')(layers)
+    layers = tf.keras.layers.Reshape((img_side, img_side))(layers)
+
+    model = tf.keras.Model(input_layer, layers, name=name)
+    return model
+
+
+def AAE_build_discriminator(latent_dim=100, name='AAE_discriminator'):
+    input_layer = tf.keras.Input(latent_dim)
+
+    layers = tf.keras.layers.Flatten()(input_layer)
+    layers = tf.keras.layers.Dense(512)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(256)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(1)(layers)
+    layers = tf.keras.layers.Activation('sigmoid')(layers)
+
+    model = tf.keras.Model(input_layer, layers, name=name)
+    return model
+
+""" ---------------------------------------------------------- """
+
 DATA_TYPE = "emnist-letters"
 PROJECT_FOLDER = "temp_project/EMINST_AAE/"
 
@@ -45,17 +96,16 @@ table = [["Training set", "x_train", x_train.shape, x_train.dtype, x_train.nbyte
 print(tabulate(table, headers=headers))
 print("")
 
-
-
 """ BUILDING THE MODELS """
 print("Building the AAE model...", end=' ')
 img_shape = (28, 28)
 latent_dimension = 10
-encoder_model = GCG_models.AAE_build_encoder(img_shape, latent_dimension)
-decoder_model = GCG_models.AAE_build_decoder(img_shape, latent_dimension)
-discriminator_model = GCG_models.AAE_build_discriminator(latent_dimension)
+encoder_model = AAE_build_encoder(img_shape, latent_dimension)
+decoder_model = AAE_build_decoder(img_shape, latent_dimension)
+discriminator_model = AAE_build_discriminator(latent_dimension)
 autoencoder_model = tf.keras.models.Sequential([encoder_model, decoder_model], name='AAE_autoencoder')
-encoder_discriminator_model = tf.keras.models.Sequential([encoder_model, discriminator_model], name='AAE_encoder_discriminator')
+encoder_discriminator_model = tf.keras.models.Sequential([encoder_model, discriminator_model],
+                                                         name='AAE_encoder_discriminator')
 
 discriminator_model.compile(
     optimizer='adam',
@@ -91,7 +141,6 @@ if not os.path.exists(PROJECT_FOLDER):
     for epoch in range(n_epochs):
         print("Epoch number", epoch + 1, "of", n_epochs, flush=True)
         for x_batch in tqdm(dataset, unit='batch', total=int(x_train.shape[0] / batch_size)):
-
             # train the discriminator
             noise = tf.random.normal(shape=[batch_size, img_shape[0], img_shape[1]])
             latent_real = encoder_model(noise)
@@ -149,5 +198,3 @@ for i in range(5):
         plt.imshow(latent_real[i].reshape((28, 28)), cmap='gray_r')
     plt.show()  # see the results
     plt.close('all')
-
-
