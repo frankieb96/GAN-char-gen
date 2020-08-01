@@ -34,3 +34,11 @@ Also, some useful links:
 -----------------------------------------------------------------------------------------------------------------------
 Praise the Lord, and StackOverflow even more!
 > https://stackoverflow.com/questions/51125969/loading-emnist-letters-dataset
+
+
+01/08/2020 22:02
+-----------------------------------------------------------------------------------------------------------------------
+Still not working. 
+
+See A. Geron, *Hands-on ML with Sklearn, Keras, and TF* (pdf), pagg. 772-773. Idea 
+is to increase the latent space, but to add a regularizer l1 or l2 for sparsity.

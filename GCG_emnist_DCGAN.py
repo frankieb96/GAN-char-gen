@@ -12,7 +12,8 @@ latent_dimension = 100
 
 """ GENERATOR/DISCRIMINATOR MODEL CREATOR FUNCTIONS """
 
-def DCGAN_build_generator(latent_dimension=100, name='EMNIST_DCGAN_generator'):
+
+def DCGAN_build_generator(latent_dimension=100, name='DCGAN_generator'):
     """
     # TODO write pydocs
 
@@ -24,19 +25,17 @@ def DCGAN_build_generator(latent_dimension=100, name='EMNIST_DCGAN_generator'):
     layer_input = tf.keras.Input(latent_dimension)
 
     layers = tf.keras.layers.Dense(7 * 7 * 128)(layer_input)
-    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
     layers = tf.keras.layers.Reshape([7, 7, 128])(layers)
-    layers = tf.keras.layers.Conv2DTranspose(64, kernel_size=5, strides=2, padding='same')(layers)
-    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.BatchNormalization()(layers)
+    layers = tf.keras.layers.Conv2DTranspose(64, kernel_size=5, strides=2, padding='same', activation='selu')(layers)
     layers = tf.keras.layers.BatchNormalization()(layers)
     layers = tf.keras.layers.Conv2DTranspose(1, kernel_size=5, strides=2, padding='same', activation='tanh')(layers)
-    #layers = tf.keras.layers.Reshape((28, 28))(layers)
 
     model = tf.keras.models.Model(layer_input, layers, name=name)
     return model
 
 
-def DCGAN_build_discriminator(img_shape=(28, 28, 1), name='EMNIST_DCGAN_discriminator'):
+def DCGAN_build_discriminator(img_shape=(28, 28, 1), name='DCGAN_discriminator'):
     """
     # TODO write pydocs
 
@@ -115,6 +114,7 @@ print("done.", flush=True)
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
 batch_size = 32
 n_epochs = 5
+end_epoch_noise = tf.random.normal(shape=[25, latent_dimension])
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
 if not os.path.exists("temp_project/" + dcgan_model.name):
@@ -143,8 +143,7 @@ if not os.path.exists("temp_project/" + dcgan_model.name):
             dcgan_model.train_on_batch(noise, y2)
 
         # save a sample at the end of each epoch
-        noise = tf.random.normal(shape=[25, latent_dimension])
-        fake_images = generator_model(noise).numpy()
+        fake_images = generator_model(end_epoch_noise).numpy()
         # plot images
         for i in range(25):
             # define subplot
