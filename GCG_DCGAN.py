@@ -56,6 +56,7 @@ print("done.", flush=True)
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
 batch_size = 32
 n_epochs = 5
+end_epoch_noise = tf.random.normal(shape=[25, latent_dimension])  # for consistency
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
 if not os.path.exists("temp_project/" + dcgan_model.name):
@@ -83,8 +84,7 @@ if not os.path.exists("temp_project/" + dcgan_model.name):
             dcgan_model.train_on_batch(noise, y2)
 
         # save a sample at the end of each epoch
-        noise = tf.random.normal(shape=[25, latent_dimension])
-        fake_images = generator_model(noise).numpy()
+        fake_images = generator_model(end_epoch_noise).numpy()
         # plot images
         for i in range(25):
             # define subplot
