@@ -68,10 +68,9 @@ def DCGAN_build_generator(latent_dimension=100, name='DCGAN_generator'):
     layer_input = tf.keras.Input(latent_dimension)
 
     layers = tf.keras.layers.Dense(7 * 7 * 128)(layer_input)
-    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
     layers = tf.keras.layers.Reshape([7, 7, 128])(layers)
-    layers = tf.keras.layers.Conv2DTranspose(64, kernel_size=5, strides=2, padding='same')(layers)
-    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.BatchNormalization()(layers)
+    layers = tf.keras.layers.Conv2DTranspose(64, kernel_size=5, strides=2, padding='same', activation='selu')(layers)
     layers = tf.keras.layers.BatchNormalization()(layers)
     layers = tf.keras.layers.Conv2DTranspose(1, kernel_size=5, strides=2, padding='same', activation='tanh')(layers)
 
