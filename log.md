@@ -42,3 +42,40 @@ Still not working.
 
 See A. Geron, *Hands-on ML with Sklearn, Keras, and TF* (pdf), pagg. 772-773. Idea 
 is to increase the latent space, but to add a regularizer l1 or l2 for sparsity.
+
+
+02/08/2020 09:01
+-----------------------------------------------------------------------------------------------------------------------
+Now it starts being a little bit more succesfull. The DCGAN works appropriately well
+but I need the big pc to train it more.
+
+About the AEE, it seems this architecture achieves fairly good results:
+>https://rubikscode.net/2019/01/21/generating-images-using-adversarial-autoencoders-and-python/
+
+Anyway, time presses on. I will run both on the bigger pc as soon as I come home.
+For now, it is time to write the report.
+Also, I need to try another dataset, so I copy paste here the message:
+>Dear all,
+>
+>in case you have choen the project on GANs, here you can find some datasets that can be used
+>
+>https://www.nist.gov/itl/products-and-services/emnist-dataset
+>http://yann.lecun.com/exdb/mnist/
+>https://davidstutz.de/fonts-a-synthetic-mnist-like-dataset-with-known-manifold/
+>http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/
+>
+>In some cases you need to adapt them to the size of MNIST letters (28x28).
+>
+>Regards,
+>
+>SM
+>
+>P.S. in case you want to try other things with GANs you can also check the datasets
+>
+>Fashion-MNIST https://github.com/zalandoresearch/fashion-mnist
+>
+>Pokemon https://www.kaggle.com/kvpratama/pokemon-images-dataset#101.png
+>
+>African fabrics https://www.kaggle.com/mikuns/african-fabric
+>
+>together with the more traditional ones (faces, dogs)

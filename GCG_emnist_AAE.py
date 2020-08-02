@@ -12,33 +12,33 @@ latent_dimension = 100
 
 """ ENCODER/DECODER/DISCRIMINATOR MODEL CREATOR FUNCTIONS """
 
+
 def AAE_build_encoder(img_shape=(28, 28), latent_dim=100, name='AAE_encoder'):
-    input_layer = tf.keras.Input(img_shape)
+    encoder_input = tf.keras.layers.Input(img_shape)
 
-    layers = tf.keras.layers.Reshape((img_shape[0], img_shape[1], 1))(input_layer)
-    layers = tf.keras.layers.Conv2D(16, kernel_size=(3,3), strides=1, activation='elu', padding='same')(layers)
-    layers = tf.keras.layers.Conv2D(32, kernel_size=(3,3), strides=2, activation='elu', padding='same')(layers)
-    layers = tf.keras.layers.Conv2D(2, kernel_size=(3,3), strides=1, activation='elu', padding='same')(layers)
-    layers = tf.keras.layers.Flatten()(layers)
-    layers = tf.keras.layers.Dense(latent_dim)(layers)
+    encoder_sequence = tf.keras.layers.Flatten()(encoder_input)
+    encoder_sequence = tf.keras.layers.Dense(512)(encoder_sequence)
+    encoder_sequence = tf.keras.layers.LeakyReLU(alpha=0.2)(encoder_sequence)
+    encoder_sequence = tf.keras.layers.Dense(512)(encoder_sequence)
+    encoder_sequence = tf.keras.layers.LeakyReLU(alpha=0.2)(encoder_sequence)
+    latent_vector = tf.keras.layers.Dense(latent_dimension)(encoder_sequence)
 
-    model = tf.keras.Model(input_layer, layers, name=name)
-    return model
+    encoder_model = tf.keras.models.Model(encoder_input, latent_vector, name=name)
+    return encoder_model
 
 
 def AAE_build_decoder(img_shape=(28, 28), latent_dim=100, name='AAE_decoder'):
     input_layer = tf.keras.Input(latent_dim)
     img_side = img_shape[0]
 
-    layers = tf.keras.layers.Dense(14*14)(input_layer)
-    layers = tf.keras.layers.Reshape([14,14,1])(layers)
-    layers = tf.keras.layers.Conv2DTranspose(16, kernel_size=(3,3), strides=1, activation='elu', padding='same')(layers)
-    layers = tf.keras.layers.Conv2DTranspose(32, kernel_size=(3,3), strides=2, activation='elu', padding='same')(layers)
-    layers = tf.keras.layers.Conv2DTranspose(1, kernel_size=(3,3), strides=1, activation='elu', padding='same')(layers)
-    layers = tf.keras.layers.Reshape([28,28])(layers)
+    layers = tf.keras.layers.Dense(512, input_dim=latent_dimension)(input_layer)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(512)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(np.prod(img_shape), activation='tanh')(layers)
+    layers = tf.keras.layers.Reshape(img_shape)(layers)
 
-
-    model = tf.keras.Model(input_layer, layers, name=name)
+    model = tf.keras.models.Model(input_layer, layers, name=name)
     return model
 
 
@@ -55,6 +55,7 @@ def AAE_build_discriminator(latent_dim=100, name='AAE_discriminator'):
 
     model = tf.keras.Model(input_layer, layers, name=name)
     return model
+
 
 """ ---------------------------------------------------------- """
 
@@ -103,28 +104,31 @@ discriminator_model = AAE_build_discriminator(latent_dimension)
 autoencoder_model = tf.keras.models.Sequential([encoder_model, decoder_model], name='AAE_autoencoder')
 encoder_discriminator_model = tf.keras.models.Sequential([encoder_model, discriminator_model],
                                                          name='AAE_encoder_discriminator')
-
+optimizer = tf.keras.optimizers.Adam(0.0002, 0.5)
 discriminator_model.compile(
-    optimizer='adam',
-    loss='binary_crossentropy'
+    optimizer=optimizer,
+    loss='binary_crossentropy',
+    metrics=['accuracy']
 )
 discriminator_model.trainable = False
 
 autoencoder_model.compile(
-    optimizer='adam',
-    loss='mse'
+    optimizer=optimizer,
+    loss=['mse'],
+    loss_weights=[0.999]
 )
 
 encoder_discriminator_model.compile(
-    optimizer='adam',
-    loss='binary_crossentropy'
+    optimizer=optimizer,
+    loss=['binary_crossentropy'],
+    loss_weights=[0.001]
 )
 print("done.", flush=True)
-
 
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
 batch_size = 32
 n_epochs = 10
+end_epoch_noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
 if not os.path.exists(PROJECT_FOLDER):
@@ -159,8 +163,7 @@ if not os.path.exists(PROJECT_FOLDER):
             encoder_discriminator_model.train_on_batch(x_batch, y2)
 
         # save a sample at the end of each epoch
-        noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
-        latent_real = autoencoder_model(noise).numpy()
+        latent_real = autoencoder_model(end_epoch_noise).numpy()
         # plot images
         for i in range(25):
             # define subplot
