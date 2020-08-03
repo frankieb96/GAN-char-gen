@@ -27,8 +27,7 @@ def DCGAN_build_generator(latent_dimension=100, name='DCGAN_generator'):
     layers = tf.keras.layers.Dense(7 * 7 * 128)(layer_input)
     layers = tf.keras.layers.Reshape([7, 7, 128])(layers)
     layers = tf.keras.layers.BatchNormalization()(layers)
-    layers = tf.keras.layers.Conv2DTranspose(64, kernel_size=5, strides=2, padding='same', activation='selu')(layers)
-    layers = tf.keras.layers.BatchNormalization()(layers)
+    layers = tf.keras.layers.Conv2DTranspose(64, kernel_size=5, strides=2, padding='same', activation='selu', kernel_initializer='lecun_normal')(layers)
     layers = tf.keras.layers.Conv2DTranspose(1, kernel_size=5, strides=2, padding='same', activation='tanh')(layers)
 
     # the output has shape (28, 28, 1)
