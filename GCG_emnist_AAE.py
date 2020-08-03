@@ -4,11 +4,14 @@ from tabulate import tabulate
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+
 import GCG_models
 from tqdm import tqdm
 
 tf.random.set_seed(1)
-latent_dimension = 100
+latent_dimension = 10
+batch_size = 32
+n_epochs = 10
 
 """ ENCODER/DECODER/DISCRIMINATOR MODEL CREATOR FUNCTIONS """
 
@@ -29,7 +32,6 @@ def AAE_build_encoder(img_shape=(28, 28), latent_dim=100, name='AAE_encoder'):
 
 def AAE_build_decoder(img_shape=(28, 28), latent_dim=100, name='AAE_decoder'):
     input_layer = tf.keras.Input(latent_dim)
-    img_side = img_shape[0]
 
     layers = tf.keras.layers.Dense(512, input_dim=latent_dimension)(input_layer)
     layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
@@ -50,8 +52,7 @@ def AAE_build_discriminator(latent_dim=100, name='AAE_discriminator'):
     layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
     layers = tf.keras.layers.Dense(256)(layers)
     layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
-    layers = tf.keras.layers.Dense(1)(layers)
-    layers = tf.keras.layers.Activation('sigmoid')(layers)
+    layers = tf.keras.layers.Dense(1, activation='sigmoid')(layers)
 
     model = tf.keras.Model(input_layer, layers, name=name)
     return model
@@ -97,7 +98,6 @@ print("")
 """ BUILDING THE MODELS """
 print("Building the AAE model...", end=' ')
 img_shape = (28, 28)
-latent_dimension = 30
 encoder_model = AAE_build_encoder(img_shape, latent_dimension)
 decoder_model = AAE_build_decoder(img_shape, latent_dimension)
 discriminator_model = AAE_build_discriminator(latent_dimension)
@@ -126,8 +126,6 @@ encoder_discriminator_model.compile(
 print("done.", flush=True)
 
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
-batch_size = 32
-n_epochs = 10
 end_epoch_noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
