@@ -13,7 +13,7 @@ latent_dimension = 100
 """ GENERATOR/DISCRIMINATOR MODEL CREATOR FUNCTIONS """
 
 
-def DCGAN_build_generator(latent_dimension=100, name='DCGAN_generator'):
+def DCGAN_build_generator(latent_dimension=100, name='EMNIST_DCGAN_generator'):
     """
     # TODO write pydocs
 
@@ -35,7 +35,7 @@ def DCGAN_build_generator(latent_dimension=100, name='DCGAN_generator'):
     return model
 
 
-def DCGAN_build_discriminator(img_shape=(28, 28, 1), name='DCGAN_discriminator'):
+def DCGAN_build_discriminator(img_shape=(28, 28, 1), name='EMNIST_DCGAN_discriminator'):
     """
     # TODO write pydocs
 
@@ -57,7 +57,7 @@ def DCGAN_build_discriminator(img_shape=(28, 28, 1), name='DCGAN_discriminator')
 """ ========================================================================================================== """
 
 DATA_TYPE = "emnist-letters"
-PROJECT_FOLDER = "temp_project/EMINST_DCGAN/"
+PROJECT_FOLDER = "temp_project/EMNIST_DCGAN/"
 
 print("Loading data {}...".format(DATA_TYPE), end=' ')
 mat = loadmat("temp_project/matlab/{}.mat".format(DATA_TYPE))
@@ -113,7 +113,7 @@ print("done.", flush=True)
 
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
 batch_size = 32
-n_epochs = 5
+n_epochs = 1
 end_epoch_noise = tf.random.normal(shape=[25, latent_dimension])
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)

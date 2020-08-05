@@ -11,12 +11,12 @@ from tqdm import tqdm
 tf.random.set_seed(1)
 latent_dimension = 10
 batch_size = 32
-n_epochs = 10
+n_epochs = 1
 
 """ ENCODER/DECODER/DISCRIMINATOR MODEL CREATOR FUNCTIONS """
 
 
-def AAE_build_encoder(img_shape=(28, 28), name='AAE_encoder'):
+def AAE_build_encoder(img_shape=(28, 28), latent_dimension=100, name='EMNIST_AAE_encoder'):
     encoder_input = tf.keras.layers.Input(img_shape)
 
     encoder_sequence = tf.keras.layers.Flatten()(encoder_input)
@@ -30,7 +30,7 @@ def AAE_build_encoder(img_shape=(28, 28), name='AAE_encoder'):
     return encoder_model
 
 
-def AAE_build_decoder(img_shape=(28, 28), latent_dim=100, name='AAE_decoder'):
+def AAE_build_decoder(img_shape=(28, 28), latent_dim=100, name='EMNIST_AAE_decoder'):
     input_layer = tf.keras.Input(latent_dim)
 
     layers = tf.keras.layers.Dense(512, input_dim=latent_dimension)(input_layer)
@@ -44,7 +44,7 @@ def AAE_build_decoder(img_shape=(28, 28), latent_dim=100, name='AAE_decoder'):
     return model
 
 
-def AAE_build_discriminator(latent_dim=100, name='AAE_discriminator'):
+def AAE_build_discriminator(latent_dim=100, name='EMNIST_AAE_discriminator'):
     input_layer = tf.keras.Input(latent_dim)
 
     layers = tf.keras.layers.Flatten()(input_layer)
@@ -61,7 +61,7 @@ def AAE_build_discriminator(latent_dim=100, name='AAE_discriminator'):
 """ ---------------------------------------------------------- """
 
 DATA_TYPE = "emnist-letters"
-PROJECT_FOLDER = "temp_project/EMINST_AAE/"
+PROJECT_FOLDER = "temp_project/EMNIST_AAE/"
 
 print("Loading data {}...".format(DATA_TYPE), end=' ')
 mat = loadmat("temp_project/matlab/{}.mat".format(DATA_TYPE))

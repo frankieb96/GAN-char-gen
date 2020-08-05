@@ -1,4 +1,6 @@
 import os
+import sys
+
 from tabulate import tabulate
 from scipy.io import loadmat
 import numpy as np
@@ -13,6 +15,29 @@ def noise_vec_to_matrix(noise_vector, height=30, axis=0):
     return out
 
 
+def show_noise_example(aae_noise, dcgan_noise, show=True, save=False):
+    plt.subplot(2, 1, 1)
+    plt.imshow(aae_noise, cmap='gray')
+    plt.yticks([])
+    plt.xticks([0, 10, 20, 27])
+    plt.title("AAE noise example")
+    plt.colorbar()
+    plt.subplot(2, 1, 2)
+    plt.imshow(noise_vec_to_matrix(dcgan_noise, height=5), cmap='gray')
+    plt.yticks([])
+    plt.xticks([0, 20, 40, 60, 80, 99])
+    plt.title("DCGAN noise example")
+    plt.colorbar(orientation='horizontal', aspect=50)
+    if show:
+        plt.show()
+    if save:
+        if not os.path.exists("temp_project/visualizer/"):
+            os.makedirs("temp_project/visualizer/")
+        plt.savefig("temp_project/visualizer/noise_example.png")
+    plt.close('all')
+
+
+""" SET GLOBAL VARIABLES AND CONSTANTS """
 tf.random.set_seed(1)
 
 aae_latent_dimension = 10
@@ -82,21 +107,32 @@ print("")
 print("Creating noise...", end=' ')
 aae_noise = tf.random.normal(shape=[5, aae_img_shape[0], aae_img_shape[1]])
 dcgan_noise = tf.random.normal(shape=[5, dcgan_latent_dimension])
-
-arr = np.max(dcgan_noise.numpy()[0])
-arr1 = np.min(dcgan_noise.numpy()[0])
-
-plt.subplot(2, 1, 1)
-plt.imshow(aae_noise.numpy()[0], cmap='gray')
-plt.yticks([])
-plt.xticks([0, 10, 20, 27])
-plt.title("AAE noise example")
-plt.colorbar()
-plt.subplot(2, 1, 2)
-plt.imshow(noise_vec_to_matrix(dcgan_noise.numpy()[0], height=5), cmap='gray')
-plt.yticks([])
-plt.xticks([0, 20, 40, 60, 80, 99])
-plt.title("DCGAN noise example")
-plt.colorbar(orientation='horizontal', aspect=50)
-plt.show()
+show_noise_example(aae_noise.numpy()[0], dcgan_noise.numpy()[0], show=False, save=True)
 print("done.")
+
+""" LOAD MODELS """
+print("Loading models...", end=' ')
+aae_paths = [aae_mnist_folder, aae_emnist_folder, dcgan_emnist_folder, dcgan_mnist_folder]
+models = {}
+for path in aae_paths:
+    if os.path.exists(path):
+        last = path.split('/')[-1]
+        # encoder
+        if os.path.exists(path + "/{}_encoder".format(last)):
+            encoder = tf.keras.models.load_model(path + "/{}_encoder".format(last))
+            models[encoder.name] = encoder
+        # decoder
+        if os.path.exists(path + "/{}_decoder".format(last)):
+            decoder = tf.keras.models.load_model(path + "/{}_decoder".format(last))
+            models[decoder.name] = decoder
+        # generator
+        if os.path.exists(path + "/{}_generator".format(last)):
+            generator = tf.keras.models.load_model(path + "/{}_generator".format(last))
+            models[generator.name] = generator
+        # discriminator
+        if os.path.exists(path + "/{}_discriminator".format(last)):
+            discriminator = tf.keras.models.load_model(path + "/{}_discriminator".format(last))
+            models[discriminator.name] = discriminator
+    else:
+        print("WARNING: model folder '{}' does not exist. This model will not be loaded.".format(path), file=sys.stderr)
+print("done. Loaded {} models:".format(len(models)), list(models.keys()))
