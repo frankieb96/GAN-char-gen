@@ -136,3 +136,24 @@ for path in aae_paths:
     else:
         print("WARNING: model folder '{}' does not exist. This model will not be loaded.".format(path), file=sys.stderr)
 print("done. Loaded {} models:".format(len(models)), list(models.keys()))
+
+aae = tf.keras.models.Sequential([models['AAE_encoder'], models['AAE_decoder']])
+out = aae(aae_noise).numpy()
+print(out.shape)
+
+emnist_aae = tf.keras.Sequential([models['EMNIST_AAE_encoder'], models['EMNIST_AAE_decoder']])
+out = aae(aae_noise).numpy()
+print(out.shape)
+
+dcgan_generator = models['DCGAN_generator']
+dcgan_discriminator = models['DCGAN_discriminator']
+out = dcgan_generator(dcgan_noise).numpy()
+out = out.reshape(out.shape[0], out.shape[1], out.shape[2])
+print(out.shape)
+
+emnist_dcgan_generator = models['EMNIST_DCGAN_generator']
+emnist_dcgan_discriminator = models['EMNIST_DCGAN_discriminator']
+out = emnist_dcgan_generator(dcgan_noise).numpy()
+out = out.reshape(out.shape[0], out.shape[1], out.shape[2])
+print(out.shape)
+
