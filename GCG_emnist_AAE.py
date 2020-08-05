@@ -16,7 +16,7 @@ n_epochs = 10
 """ ENCODER/DECODER/DISCRIMINATOR MODEL CREATOR FUNCTIONS """
 
 
-def AAE_build_encoder(img_shape=(28, 28), latent_dim=100, name='AAE_encoder'):
+def AAE_build_encoder(img_shape=(28, 28), name='AAE_encoder'):
     encoder_input = tf.keras.layers.Input(img_shape)
 
     encoder_sequence = tf.keras.layers.Flatten()(encoder_input)
@@ -186,13 +186,16 @@ else:
 
 """ SEE RESULTS """
 # plot images
-for i in range(5):
-    noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
+for j in range(5):
+    noise = tf.random.normal(shape=[5, img_shape[0], img_shape[1]])
     latent_real = autoencoder_model(noise).numpy()
     # plot images
-    for i in range(25):
+    for i in range(5):
         # define subplot
-        plt.subplot(5, 5, 1 + i)
+        plt.subplot(2, 5, 1 + i)
+        plt.axis('off')
+        plt.imshow(noise.numpy()[i].reshape((28, 28)), cmap='gray_r')
+        plt.subplot(2, 5, 6 + i)
         plt.axis('off')
         plt.imshow(latent_real[i].reshape((28, 28)), cmap='gray_r')
     plt.show()  # see the results
