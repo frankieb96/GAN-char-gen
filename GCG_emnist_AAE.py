@@ -115,13 +115,13 @@ discriminator_model.trainable = False
 autoencoder_model.compile(
     optimizer=optimizer,
     loss=['mse'],
-    loss_weights=[0.999]
+    loss_weights=[0.99]
 )
 
 encoder_discriminator_model.compile(
     optimizer=optimizer,
     loss=['binary_crossentropy'],
-    loss_weights=[0.001]
+    loss_weights=[0.01]
 )
 print("done.", flush=True)
 

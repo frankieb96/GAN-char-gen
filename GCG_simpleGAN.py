@@ -6,19 +6,50 @@ import matplotlib.pyplot as plt
 import GCG_models
 from tqdm import tqdm
 
+
+def DCGAN_build_generator(latent_dimension=100, name='DCGAN_generator'):
+    layer_input = tf.keras.Input(latent_dimension)
+
+    layers = tf.keras.layers.Dense(7 * 7 * 128)(layer_input)
+    layers = tf.keras.layers.Reshape([7, 7, 128])(layers)
+    layers = tf.keras.layers.BatchNormalization()(layers)
+    layers = tf.keras.layers.Conv2DTranspose(64, kernel_size=5, strides=2, padding='same', activation='selu', kernel_initializer='lecun_normal')(layers)
+    layers = tf.keras.layers.Conv2DTranspose(1, kernel_size=5, strides=2, padding='same', activation='tanh')(layers)
+
+    # the output has shape (28, 28, 1)
+    model = tf.keras.models.Model(layer_input, layers, name=name)
+    return model
+
+
+def DCGAN_build_discriminator(img_shape=(28, 28, 1), name='DCGAN_discriminator'):
+    layer_input = tf.keras.Input(img_shape)
+
+    layers = tf.keras.layers.Conv2D(64, kernel_size=5, strides=2, padding='same')(layer_input)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dropout(rate=0.4)(layers)
+    layers = tf.keras.layers.Conv2D(128, kernel_size=5, strides=2, padding='same')(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dropout(rate=0.4)(layers)
+    layers = tf.keras.layers.Flatten()(layers)
+    layers = tf.keras.layers.Dense(1, activation='sigmoid')(layers)
+
+    model = tf.keras.models.Model(layer_input, layers, name=name)
+    return model
+
+
 tf.random.set_seed(1)
 latent_dimension = 100
 
 """ LOADING DATASET """
 print("\nLoading MNIST dataset...", end=' ')
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-img_shape = x_train[0].shape
+img_shape = (28, 28, 1)
 print("done.")
 
 """ NORMALIZATION """
 print("Normalizing data...", end=' ')
-x_train = (x_train / 255).astype(np.float32)
-x_test = (x_test / 255).astype(np.float32)
+x_train = (x_train / 255).astype(np.float32).reshape([x_train.shape[0], 28, 28, 1])
+x_test = (x_test / 255).astype(np.float32).reshape([x_test.shape[0], 28, 28, 1])
 print("done.")
 
 # see memory footprint
@@ -35,8 +66,8 @@ print("")
 
 """ BUILDING THE MODELS """
 print("Building the GAN models...", end=' ')
-generator_model = GCG_models.simpleGAN_build_generator(latent_dimension)
-discriminator_model = GCG_models.simpleGAN_build_discriminator(img_shape)
+generator_model = DCGAN_build_generator(latent_dimension)
+discriminator_model = DCGAN_build_discriminator(img_shape)
 gan_model = tf.keras.models.Sequential([generator_model, discriminator_model], name='SimpleGAN')
 
 discriminator_model.compile(
@@ -53,7 +84,7 @@ print("done.", flush=True)
 
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
 batch_size = 32
-n_epochs = 5
+n_epochs = 10
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
 if not os.path.exists("temp_project/" + gan_model.name):
@@ -82,7 +113,7 @@ if not os.path.exists("temp_project/" + gan_model.name):
 
         # save a sample at the end of each epoch
         noise = tf.random.normal(shape=[25, latent_dimension])
-        fake_images = generator_model(noise)
+        fake_images = generator_model(noise).numpy().reshape([25, 28, 28])
         # plot images
         for i in range(25):
             # define subplot
@@ -107,7 +138,7 @@ else:
 # plot images
 for i in range(5):
     noise = tf.random.normal(shape=[25, latent_dimension])
-    fake_images = generator_model(noise)
+    fake_images = generator_model(noise).numpy().reshape([25, 28, 28])
     for i in range(25):
         # define subplot
         plt.subplot(5, 5, 1 + i)
