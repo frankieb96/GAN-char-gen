@@ -68,7 +68,7 @@ print("")
 print("Building the GAN models...", end=' ')
 generator_model = DCGAN_build_generator(latent_dimension)
 discriminator_model = DCGAN_build_discriminator(img_shape)
-gan_model = tf.keras.models.Sequential([generator_model, discriminator_model], name='SimpleGAN')
+gan_model = tf.keras.models.Sequential([generator_model, discriminator_model], name='DCGAN')
 
 discriminator_model.compile(
     optimizer='adam',
@@ -84,7 +84,7 @@ print("done.", flush=True)
 
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
 batch_size = 32
-n_epochs = 10
+n_epochs = 1
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
 if not os.path.exists("temp_project/" + gan_model.name):

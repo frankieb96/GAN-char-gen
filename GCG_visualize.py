@@ -1,8 +1,6 @@
 import math
 import os
 import sys
-
-from et_xmlfile import xmlfile
 from tabulate import tabulate
 from scipy.io import loadmat
 import numpy as np
@@ -51,6 +49,8 @@ dcgan_latent_dimension = 100
 dcgan_img_shape = (28, 28, 1)
 dcgan_emnist_folder = "temp_project/EMNIST_DCGAN"
 dcgan_mnist_folder = "temp_project/DCGAN"
+
+NOISE_NUM = 25
 
 """ LOAD MNIST AND EMNIST-LETTERS """
 EMNIST_DATA_TYPE = "emnist-letters"
@@ -107,8 +107,8 @@ print("")
 
 """ CREATE NOISE """
 print("Creating noise...", end=' ')
-aae_noise = tf.random.normal(shape=[5, aae_img_shape[0], aae_img_shape[1]])
-dcgan_noise = tf.random.normal(shape=[5, dcgan_latent_dimension])
+aae_noise = tf.random.normal(shape=[NOISE_NUM, aae_img_shape[0], aae_img_shape[1]])
+dcgan_noise = tf.random.normal(shape=[NOISE_NUM, dcgan_latent_dimension])
 show_noise_example(aae_noise.numpy()[0], dcgan_noise.numpy()[0], show=False, save=True)
 print("done.")
 
@@ -141,24 +141,26 @@ print("done. Loaded {} models:".format(len(models)), list(models.keys()))
 
 aae = tf.keras.models.Sequential([models['AAE_encoder'], models['AAE_decoder']], name='MNIST_AAE')
 out = aae(aae_noise).numpy()
-print(out.shape)
-x_ax = max([int(math.sqrt(out.shape[0])), 1])
-y_ax = out.shape[0] - x_ax
+x_ax = int(math.sqrt(out.shape[0]))
+y_ax = x_ax
 plt.suptitle("Output of {}".format(aae.name))
 for i in range(out.shape[0]):
     plt.subplot(x_ax, y_ax, 1 + i)
+    plt.xticks([])
+    plt.yticks([])
     plt.imshow(out[i], cmap='gray_r')
 plt.show()
 plt.close('all')
 
 emnist_aae = tf.keras.Sequential([models['EMNIST_AAE_encoder'], models['EMNIST_AAE_decoder']], name='EMNIST_AAE')
 out = emnist_aae(aae_noise).numpy()
-print(out.shape)
-x_ax = max([int(math.sqrt(out.shape[0])), 1])
-y_ax = out.shape[0] - x_ax
+x_ax = int(math.sqrt(out.shape[0]))
+y_ax = x_ax
 plt.suptitle("Output of {}".format(emnist_aae.name))
 for i in range(out.shape[0]):
     plt.subplot(x_ax, y_ax, 1 + i)
+    plt.xticks([])
+    plt.yticks([])
     plt.imshow(out[i], cmap='gray_r')
 plt.show()
 plt.close('all')
@@ -167,12 +169,13 @@ dcgan_generator = models['DCGAN_generator']
 dcgan_discriminator = models['DCGAN_discriminator']
 out = dcgan_generator(dcgan_noise).numpy()
 out = out.reshape(out.shape[0], out.shape[1], out.shape[2])
-print(out.shape)
-x_ax = max([int(math.sqrt(out.shape[0])), 1])
-y_ax = out.shape[0] - x_ax
+x_ax = int(math.sqrt(out.shape[0]))
+y_ax = x_ax
 plt.suptitle("Output of {}".format(dcgan_generator.name))
 for i in range(out.shape[0]):
     plt.subplot(x_ax, y_ax, 1 + i)
+    plt.xticks([])
+    plt.yticks([])
     plt.imshow(out[i], cmap='gray_r')
 plt.show()
 plt.close('all')
@@ -181,13 +184,15 @@ emnist_dcgan_generator = models['EMNIST_DCGAN_generator']
 emnist_dcgan_discriminator = models['EMNIST_DCGAN_discriminator']
 out = emnist_dcgan_generator(dcgan_noise).numpy()
 out = out.reshape(out.shape[0], out.shape[1], out.shape[2])
-print(out.shape)
-x_ax = max([int(math.sqrt(out.shape[0])), 1])
-y_ax = out.shape[0] - x_ax
+x_ax = int(math.sqrt(out.shape[0]))
+y_ax = x_ax
 plt.suptitle("Output of {}".format(emnist_dcgan_generator.name))
 for i in range(out.shape[0]):
     plt.subplot(x_ax, y_ax, 1 + i)
+    plt.xticks([])
+    plt.yticks([])
     plt.imshow(out[i], cmap='gray_r')
 plt.show()
 plt.close('all')
 
+""" ERRORS RATE """
