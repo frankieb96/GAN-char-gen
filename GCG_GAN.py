@@ -95,50 +95,19 @@ if not os.path.exists("temp_project/" + gan_model.name):
     os.makedirs("temp_project/" + gan_model.name + "/train_images/")
     discriminator_history = GCG_utils.train_DCGAN(gan_model, generator_model, discriminator_model, dataset, int(x_train.shape[0] / batch_size), latent_dimension, batch_size, n_epochs)
 
-    """
-    # training
-    for epoch in range(n_epochs):
-        print("Epoch number", epoch + 1, "of", n_epochs, flush=True)
-        for x_batch in tqdm(dataset, unit='batch', total=int(x_train.shape[0] / batch_size)):
-            # train the discriminator
-            noise = tf.random.normal(shape=[batch_size, latent_dimension])
-            fake_images = generator_model(noise)
-            x_tot = tf.concat([fake_images, x_batch], axis=0)
-            y1 = tf.constant([[0.]] * batch_size + [[1.]] * batch_size)
-            discriminator_model.trainable = True
-            discriminator_model.train_on_batch(x_tot, y1)
-            discriminator_model.trainable = False
-
-            # train the generator
-            noise = tf.random.normal(shape=[batch_size, latent_dimension])
-            y2 = tf.constant([[1.]] * batch_size)
-            gan_model.train_on_batch(noise, y2)
-
-        # save a sample at the end of each epoch
-        noise = tf.random.normal(shape=[25, latent_dimension])
-        fake_images = generator_model(noise).numpy().reshape([25, 28, 28])
-        # plot images
-        for i in range(25):
-            # define subplot
-            plt.subplot(5, 5, 1 + i)
-            plt.axis('off')
-            plt.imshow(fake_images[i], cmap='gray_r')
-        if not os.path.isdir("temp_project/" + gan_model.name + "/train_images/"):
-            os.makedirs("temp_project/" + gan_model.name + "/train_images/")
-        plt.savefig("temp_project/" + gan_model.name + "/train_images/train_epoch_{}".format(epoch + 1))
-        plt.close('all')
-    print("Training complete. Saving the model...", end=' ')
-    generator_model.save("temp_project\\" + gan_model.name + "\\" + generator_model.name)
-    discriminator_model.save("temp_project\\" + gan_model.name + "\\" + discriminator_model.name)
-    print("done.")
-    """
 else:
     print("Folder '{}'".format(gan_model.name), "has been found: loading model, no need to retrain.")
     generator_model = tf.keras.models.load_model("temp_project\\" + gan_model.name + "\\" + generator_model.name)
     discriminator_model = tf.keras.models.load_model("temp_project\\" + gan_model.name + "\\" + discriminator_model.name)
-    gan_model = tf.keras.models.Sequential([generator_model, discriminator_model], name="SimpleGAN")
+    gan_model = tf.keras.models.Sequential([generator_model, discriminator_model], name="DCGAN")
+    discriminator_history = np.fromfile("temp_project/" + gan_model.name + "/discriminator_history")
 
 """ SEE RESULTS """
+# plot history
+plt.plot(discriminator_history)
+plt.title(gan_model.name + " discriminator loss history")
+plt.show()
+
 # plot images
 for i in range(5):
     noise = tf.random.normal(shape=[25, latent_dimension])
