@@ -47,6 +47,30 @@ def plot_visual_inspection(images, rows, cols, name):
     plt.show()
     plt.close('all')
 
+
+def load_aae(path):
+    if os.path.exists(path):
+        last = path.split('/')[-1]
+        encoder = tf.keras.models.load_model(path + "/{}_encoder".format(last))
+        decoder = tf.keras.models.load_model(path + "/{}_decoder".format(last))
+        discriminator = tf.keras.models.load_model(path + "/{}_discriminator".format(last))
+        return encoder, decoder, discriminator
+    else:
+        print("WARNING: model folder '{}' does not exist. This model will not be loaded.".format(path), file=sys.stderr)
+        return None
+
+
+def load_dcgan(path):
+    if os.path.exists(path):
+        last = path.split('/')[-1]
+        generator = tf.keras.models.load_model(path + "/{}_generator".format(last))
+        discriminator = tf.keras.models.load_model(path + "/{}_discriminator".format(last))
+        return generator, discriminator
+    else:
+        print("WARNING: model folder '{}' does not exist. This model will not be loaded.".format(path), file=sys.stderr)
+        return None
+
+
 """ SET GLOBAL VARIABLES AND CONSTANTS """
 tf.random.set_seed(1)
 
@@ -124,29 +148,19 @@ print("done.")
 
 """ LOAD MODELS """
 print("Loading models...", end=' ')
-aae_paths = [aae_mnist_folder, aae_emnist_folder, dcgan_emnist_folder, dcgan_mnist_folder]
 models = {}
+aae_paths = [aae_mnist_folder, aae_emnist_folder]
+dcgan_paths = [dcgan_emnist_folder, dcgan_mnist_folder]
 for path in aae_paths:
-    if os.path.exists(path):
-        last = path.split('/')[-1]
-        # encoder
-        if os.path.exists(path + "/{}_encoder".format(last)):
-            encoder = tf.keras.models.load_model(path + "/{}_encoder".format(last))
-            models[encoder.name] = encoder
-        # decoder
-        if os.path.exists(path + "/{}_decoder".format(last)):
-            decoder = tf.keras.models.load_model(path + "/{}_decoder".format(last))
-            models[decoder.name] = decoder
-        # generator
-        if os.path.exists(path + "/{}_generator".format(last)):
-            generator = tf.keras.models.load_model(path + "/{}_generator".format(last))
-            models[generator.name] = generator
-        # discriminator
-        if os.path.exists(path + "/{}_discriminator".format(last)):
-            discriminator = tf.keras.models.load_model(path + "/{}_discriminator".format(last))
-            models[discriminator.name] = discriminator
-    else:
-        print("WARNING: model folder '{}' does not exist. This model will not be loaded.".format(path), file=sys.stderr)
+    ob = load_aae(path)
+    if ob is not None:
+        for submodule in ob:
+            models[submodule.name] = submodule
+for path in dcgan_paths:
+    ob = load_dcgan(path)
+    if ob is not None:
+        for submodule in ob:
+            models[submodule.name] = submodule
 print("done. Loaded {} models:".format(len(models)), list(models.keys()))
 
 aae = tf.keras.models.Sequential([models['AAE_encoder'], models['AAE_decoder']], name='MNIST_AAE')
