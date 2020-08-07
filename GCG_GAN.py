@@ -4,7 +4,6 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import GCG_utils
-from tqdm import tqdm
 
 
 def DCGAN_build_generator(latent_dimension=100, name='DCGAN_generator'):

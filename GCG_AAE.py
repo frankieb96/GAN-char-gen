@@ -60,7 +60,7 @@ tf.random.set_seed(1)
 latent_dimension = 10
 img_shape = (28, 28)
 batch_size = 32
-n_epochs = 2
+n_epochs = 3
 PATH = "temp_project/AAE/"
 
 """ LOADING DATASET """
@@ -126,49 +126,6 @@ if not os.path.exists("temp_project/AAE"):
     os.makedirs(PATH + "train_images/")
     GCG_utils.train_AAE(encoder_model, decoder_model, discriminator_model, autoencoder_model, encoder_discriminator_model,
                         dataset, path=PATH, total_batches=int(x_train.shape[0] / batch_size), n_epochs=n_epochs)
-    """
-    # training
-    for epoch in range(n_epochs):
-        print("Epoch number", epoch + 1, "of", n_epochs, flush=True)
-        for x_batch in tqdm(dataset, unit='batch', total=int(x_train.shape[0] / batch_size)):
-            # train the discriminator
-            noise = tf.random.normal(shape=[batch_size, img_shape[0], img_shape[1]])
-            latent_real = encoder_model(noise)
-            latent_fake = encoder_model(x_batch)
-            x_tot = tf.concat([latent_real, latent_fake], axis=0)
-            y1 = tf.constant([[1.]] * batch_size + [[0.]] * batch_size)
-            discriminator_model.trainable = True
-            discriminator_model.train_on_batch(x_tot, y1)
-            discriminator_model.trainable = False
-
-            # train the autoencode reconstruction
-            idx = np.random.randint(0, x_train.shape[0], batch_size)
-            imgs = x_train[idx]
-            autoencoder_model.train_on_batch(imgs, imgs)
-
-            # train the generator
-            y2 = tf.constant([[1.]] * batch_size)
-            encoder_discriminator_model.train_on_batch(x_batch, y2)
-
-        # save a sample at the end of each epoch
-        noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
-        latent_real = autoencoder_model(noise).numpy()
-        # plot images
-        for i in range(25):
-            # define subplot
-            plt.subplot(5, 5, 1 + i)
-            plt.axis('off')
-            plt.imshow(latent_real[i].reshape(28, 28), cmap='gray_r')
-        if not os.path.isdir("temp_project/AAE/train_images/"):
-            os.makedirs("temp_project/AAE/train_images/")
-        plt.savefig("temp_project/AAE/train_images/train_epoch_{}".format(epoch + 1))
-        plt.close('all')
-    print("Training complete. Saving the model...", end=' ')
-    discriminator_model.save("temp_project\\AAE\\" + discriminator_model.name)
-    encoder_model.save("temp_project\\AAE\\" + encoder_model.name)
-    decoder_model.save("temp_project\\AAE\\" + decoder_model.name)
-    print("done.")
-    """
 else:
     print("Folder '{}' has been found: loading model, no need to retrain.".format(PATH))
     discriminator_model = tf.keras.models.load_model(PATH + discriminator_model.name)

@@ -6,12 +6,6 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 import GCG_utils
-from tqdm import tqdm
-
-tf.random.set_seed(1)
-latent_dimension = 10
-batch_size = 32
-n_epochs = 1
 
 """ ENCODER/DECODER/DISCRIMINATOR MODEL CREATOR FUNCTIONS """
 
@@ -61,7 +55,11 @@ def AAE_build_discriminator(latent_dim=100, name='EMNIST_AAE_discriminator'):
 """ ---------------------------------------------------------- """
 
 DATA_TYPE = "emnist-letters"
-PROJECT_FOLDER = "temp_project/EMNIST_AAE/"
+PATH = "temp_project/EMNIST_AAE/"
+tf.random.set_seed(1)
+latent_dimension = 10
+batch_size = 32
+n_epochs = 3
 
 print("Loading data {}...".format(DATA_TYPE), end=' ')
 mat = loadmat("temp_project/matlab/{}.mat".format(DATA_TYPE))
@@ -107,8 +105,8 @@ encoder_discriminator_model = tf.keras.models.Sequential([encoder_model, discrim
 optimizer = tf.keras.optimizers.Adam(0.0002, 0.5)
 discriminator_model.compile(
     optimizer=optimizer,
-    loss='binary_crossentropy',
-    metrics=['accuracy']
+    loss='binary_crossentropy'
+    #metrics=['accuracy']
 )
 discriminator_model.trainable = False
 
@@ -129,57 +127,20 @@ print("done.", flush=True)
 end_epoch_noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
-if not os.path.exists(PROJECT_FOLDER):
-    print("Folder '{}' has not been found: training the model over".format(PROJECT_FOLDER), n_epochs, "epochs.")
-    os.makedirs(PROJECT_FOLDER)
-    os.makedirs(PROJECT_FOLDER + discriminator_model.name)
-    os.makedirs(PROJECT_FOLDER + encoder_model.name)
-    os.makedirs(PROJECT_FOLDER + decoder_model.name)
-    os.makedirs(PROJECT_FOLDER + "train_images/")
-
-    # training
-    for epoch in range(n_epochs):
-        print("Epoch number", epoch + 1, "of", n_epochs, flush=True)
-        for x_batch in tqdm(dataset, unit='batch', total=int(x_train.shape[0] / batch_size)):
-            # train the discriminator
-            noise = tf.random.normal(shape=[batch_size, img_shape[0], img_shape[1]])
-            latent_real = encoder_model(noise)
-            latent_fake = encoder_model(x_batch)
-            x_tot = tf.concat([latent_real, latent_fake], axis=0)
-            y1 = tf.constant([[1.]] * batch_size + [[0.]] * batch_size)
-            discriminator_model.trainable = True
-            discriminator_model.train_on_batch(x_tot, y1)
-            discriminator_model.trainable = False
-
-            # train the autoencode reconstruction
-            idx = np.random.randint(0, x_train.shape[0], batch_size)
-            imgs = x_train[idx]
-            autoencoder_model.train_on_batch(imgs, imgs)
-
-            # train the generator
-            y2 = tf.constant([[1.]] * batch_size)
-            encoder_discriminator_model.train_on_batch(x_batch, y2)
-
-        # save a sample at the end of each epoch
-        latent_real = autoencoder_model(end_epoch_noise).numpy()
-        # plot images
-        for i in range(25):
-            # define subplot
-            plt.subplot(5, 5, 1 + i)
-            plt.axis('off')
-            plt.imshow(latent_real[i].reshape(28, 28), cmap='gray_r')
-        plt.savefig(PROJECT_FOLDER + "train_images/train_epoch_{}".format(epoch + 1))
-        plt.close('all')
-    print("Training complete. Saving the model...", end=' ')
-    discriminator_model.save(PROJECT_FOLDER + discriminator_model.name)
-    encoder_model.save(PROJECT_FOLDER + encoder_model.name)
-    decoder_model.save(PROJECT_FOLDER + decoder_model.name)
-    print("done.")
+if not os.path.exists(PATH):
+    print("Folder '{}' has not been found: training the model over".format(PATH), n_epochs, "epochs.")
+    os.makedirs(PATH)
+    os.makedirs(PATH + discriminator_model.name)
+    os.makedirs(PATH + encoder_model.name)
+    os.makedirs(PATH + decoder_model.name)
+    os.makedirs(PATH + "train_images/")
+    GCG_utils.train_AAE(encoder_model, decoder_model, discriminator_model, autoencoder_model, encoder_discriminator_model,
+                        dataset, path=PATH, total_batches=int(x_train.shape[0] / batch_size), n_epochs=n_epochs)
 else:
-    print("Folder '{}' has been found: loading model, no need to retrain.".format(PROJECT_FOLDER))
-    discriminator_model = tf.keras.models.load_model(PROJECT_FOLDER + discriminator_model.name)
-    encoder_model = tf.keras.models.load_model(PROJECT_FOLDER + encoder_model.name)
-    decoder_model = tf.keras.models.load_model(PROJECT_FOLDER + decoder_model.name)
+    print("Folder '{}' has been found: loading model, no need to retrain.".format(PATH))
+    discriminator_model = tf.keras.models.load_model(PATH + discriminator_model.name)
+    encoder_model = tf.keras.models.load_model(PATH + encoder_model.name)
+    decoder_model = tf.keras.models.load_model(PATH + decoder_model.name)
     autoencoder_model = tf.keras.models.Sequential([encoder_model, decoder_model], name='AAE_autoencoder')
     encoder_discriminator_model = tf.keras.models.Sequential([encoder_model, discriminator_model],
                                                              name='AAE_encoder_discriminator')

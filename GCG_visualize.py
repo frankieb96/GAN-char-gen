@@ -140,7 +140,7 @@ print(tabulate(table, headers=headers))
 print("")
 
 """ CREATE NOISE """
-print("Creating noise...", end=' ')
+print("Creating input noises...", end=' ')
 aae_noise = tf.random.normal(shape=[NOISE_NUM, aae_img_shape[0], aae_img_shape[1]])
 dcgan_noise = tf.random.normal(shape=[NOISE_NUM, dcgan_latent_dimension])
 show_noise_example(aae_noise.numpy()[0], dcgan_noise.numpy()[0], show=False, save=True)
@@ -152,14 +152,14 @@ models = {}
 aae_paths = [aae_mnist_folder, aae_emnist_folder]
 dcgan_paths = [dcgan_emnist_folder, dcgan_mnist_folder]
 for path in aae_paths:
-    ob = load_aae(path)
-    if ob is not None:
-        for submodule in ob:
+    item = load_aae(path)
+    if item is not None:
+        for submodule in item:
             models[submodule.name] = submodule
 for path in dcgan_paths:
-    ob = load_dcgan(path)
-    if ob is not None:
-        for submodule in ob:
+    item = load_dcgan(path)
+    if item is not None:
+        for submodule in item:
             models[submodule.name] = submodule
 print("done. Loaded {} models:".format(len(models)), list(models.keys()))
 
