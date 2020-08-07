@@ -3,7 +3,7 @@ from tabulate import tabulate
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import GCG_models
+import GCG_utils
 from tqdm import tqdm
 
 tf.random.set_seed(1)
@@ -37,8 +37,8 @@ print("")
 """ BUILDING THE MODELS """
 print("Building the GAN models...", end=' ')
 img_shape = (28, 28, 1)
-generator_model = GCG_models.DCGAN_build_generator(latent_dimension)
-discriminator_model = GCG_models.DCGAN_build_discriminator(img_shape)
+generator_model = GCG_utils.DCGAN_build_generator(latent_dimension)
+discriminator_model = GCG_utils.DCGAN_build_discriminator(img_shape)
 dcgan_model = tf.keras.models.Sequential([generator_model, discriminator_model], name='DCGAN')
 
 discriminator_model.compile(

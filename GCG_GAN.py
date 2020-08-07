@@ -3,7 +3,7 @@ from tabulate import tabulate
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import GCG_models
+import GCG_utils
 from tqdm import tqdm
 
 
@@ -39,11 +39,13 @@ def DCGAN_build_discriminator(img_shape=(28, 28, 1), name='DCGAN_discriminator')
 
 tf.random.set_seed(1)
 latent_dimension = 100
+img_shape = (28, 28, 1)
+batch_size = 32
+n_epochs = 3
 
 """ LOADING DATASET """
 print("\nLoading MNIST dataset...", end=' ')
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-img_shape = (28, 28, 1)
 print("done.")
 
 """ NORMALIZATION """
@@ -83,8 +85,6 @@ gan_model.compile(
 print("done.", flush=True)
 
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
-batch_size = 32
-n_epochs = 1
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
 if not os.path.exists("temp_project/" + gan_model.name):
@@ -92,7 +92,10 @@ if not os.path.exists("temp_project/" + gan_model.name):
     os.makedirs("temp_project/" + gan_model.name)
     os.makedirs("temp_project/" + gan_model.name + "/" + discriminator_model.name)
     os.makedirs("temp_project/" + gan_model.name + "/" + generator_model.name)
+    os.makedirs("temp_project/" + gan_model.name + "/train_images/")
+    discriminator_history = GCG_utils.train_DCGAN(gan_model, generator_model, discriminator_model, dataset, int(x_train.shape[0] / batch_size), latent_dimension, batch_size, n_epochs)
 
+    """
     # training
     for epoch in range(n_epochs):
         print("Epoch number", epoch + 1, "of", n_epochs, flush=True)
@@ -128,6 +131,7 @@ if not os.path.exists("temp_project/" + gan_model.name):
     generator_model.save("temp_project\\" + gan_model.name + "\\" + generator_model.name)
     discriminator_model.save("temp_project\\" + gan_model.name + "\\" + discriminator_model.name)
     print("done.")
+    """
 else:
     print("Folder '{}'".format(gan_model.name), "has been found: loading model, no need to retrain.")
     generator_model = tf.keras.models.load_model("temp_project\\" + gan_model.name + "\\" + generator_model.name)

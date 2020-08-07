@@ -3,11 +3,64 @@ from tabulate import tabulate
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import GCG_models
+import GCG_utils
 from tqdm import tqdm
 
+
+def AAE_build_encoder(img_shape=(28, 28), latent_dim=100, name='AAE_encoder'):
+    input_layer = tf.keras.Input(img_shape)
+
+    layers = tf.keras.layers.Flatten()(input_layer)
+    layers = tf.keras.layers.Dense(512)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(512)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(latent_dim)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+
+    model = tf.keras.Model(input_layer, layers, name=name)
+    return model
+
+
+def AAE_build_decoder(img_shape=(28, 28), latent_dim=100, name='AAE_decoder'):
+    input_layer = tf.keras.Input(latent_dim)
+    img_side = img_shape[0]
+
+    layers = tf.keras.layers.Flatten()(input_layer)
+    layers = tf.keras.layers.Dense(512)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(512)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(img_side ** 2)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Activation('tanh')(layers)
+    layers = tf.keras.layers.Reshape((img_side, img_side))(layers)
+
+    model = tf.keras.Model(input_layer, layers, name=name)
+    return model
+
+
+def AAE_build_discriminator(latent_dim=100, name='AAE_discriminator'):
+    input_layer = tf.keras.Input(latent_dim)
+
+    layers = tf.keras.layers.Flatten()(input_layer)
+    layers = tf.keras.layers.Dense(512)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(256)(layers)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    layers = tf.keras.layers.Dense(1)(layers)
+    layers = tf.keras.layers.Activation('sigmoid')(layers)
+
+    model = tf.keras.Model(input_layer, layers, name=name)
+    return model
+
+
+""" GLOBAL VARIABLES AND CONSTANTS """
 tf.random.set_seed(1)
-latent_dimension = 100
+latent_dimension = 10
+img_shape = (28, 28)
+batch_size = 32
+n_epochs = 2
 
 """ LOADING DATASET """
 print("\nLoading MNIST dataset...", end=' ')
@@ -34,13 +87,12 @@ print("")
 
 """ BUILDING THE MODELS """
 print("Building the AAE model...", end=' ')
-img_shape = (28, 28)
-latent_dimension = 10
-encoder_model = GCG_models.AAE_build_encoder(img_shape, latent_dimension)
-decoder_model = GCG_models.AAE_build_decoder(img_shape, latent_dimension)
-discriminator_model = GCG_models.AAE_build_discriminator(latent_dimension)
+encoder_model = AAE_build_encoder(img_shape, latent_dimension)
+decoder_model = AAE_build_decoder(img_shape, latent_dimension)
+discriminator_model = AAE_build_discriminator(latent_dimension)
 autoencoder_model = tf.keras.models.Sequential([encoder_model, decoder_model], name='AAE_autoencoder')
-encoder_discriminator_model = tf.keras.models.Sequential([encoder_model, discriminator_model], name='AAE_encoder_discriminator')
+encoder_discriminator_model = tf.keras.models.Sequential([encoder_model, discriminator_model],
+                                                         name='AAE_encoder_discriminator')
 
 discriminator_model.compile(
     optimizer='adam',
@@ -62,8 +114,6 @@ encoder_discriminator_model.compile(
 print("done.", flush=True)
 
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
-batch_size = 32
-n_epochs = 2
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
 if not os.path.exists("temp_project/AAE"):
@@ -77,7 +127,6 @@ if not os.path.exists("temp_project/AAE"):
     for epoch in range(n_epochs):
         print("Epoch number", epoch + 1, "of", n_epochs, flush=True)
         for x_batch in tqdm(dataset, unit='batch', total=int(x_train.shape[0] / batch_size)):
-
             # train the discriminator
             noise = tf.random.normal(shape=[batch_size, img_shape[0], img_shape[1]])
             latent_real = encoder_model(noise)
