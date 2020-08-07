@@ -61,6 +61,7 @@ latent_dimension = 10
 img_shape = (28, 28)
 batch_size = 32
 n_epochs = 2
+PATH = "temp_project/AAE/"
 
 """ LOADING DATASET """
 print("\nLoading MNIST dataset...", end=' ')
@@ -117,12 +118,15 @@ print("done.", flush=True)
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
 if not os.path.exists("temp_project/AAE"):
-    print("Folder 'AAE' has not been found: training the model over", n_epochs, "epochs.")
-    os.makedirs("temp_project/AAE")
-    os.makedirs("temp_project/AAE" + "/" + discriminator_model.name)
-    os.makedirs("temp_project/AAE" + "/" + encoder_model.name)
-    os.makedirs("temp_project/AAE" + "/" + decoder_model.name)
-
+    print("Folder '{}' has not been found: training the model over".format(PATH), n_epochs, "epochs.")
+    os.makedirs(PATH)
+    os.makedirs(PATH + discriminator_model.name)
+    os.makedirs(PATH + encoder_model.name)
+    os.makedirs(PATH + decoder_model.name)
+    os.makedirs(PATH + "train_images/")
+    GCG_utils.train_AAE(encoder_model, decoder_model, discriminator_model, autoencoder_model, encoder_discriminator_model,
+                        dataset, path=PATH, total_batches=int(x_train.shape[0] / batch_size), n_epochs=n_epochs)
+    """
     # training
     for epoch in range(n_epochs):
         print("Epoch number", epoch + 1, "of", n_epochs, flush=True)
@@ -164,11 +168,12 @@ if not os.path.exists("temp_project/AAE"):
     encoder_model.save("temp_project\\AAE\\" + encoder_model.name)
     decoder_model.save("temp_project\\AAE\\" + decoder_model.name)
     print("done.")
+    """
 else:
-    print("Folder 'AAN' has been found: loading model, no need to retrain.")
-    discriminator_model = tf.keras.models.load_model("temp_project\\AAE\\" + discriminator_model.name)
-    encoder_model = tf.keras.models.load_model("temp_project\\AAE\\" + encoder_model.name)
-    decoder_model = tf.keras.models.load_model("temp_project\\AAE\\" + decoder_model.name)
+    print("Folder '{}' has been found: loading model, no need to retrain.".format(PATH))
+    discriminator_model = tf.keras.models.load_model(PATH + discriminator_model.name)
+    encoder_model = tf.keras.models.load_model(PATH + encoder_model.name)
+    decoder_model = tf.keras.models.load_model(PATH + decoder_model.name)
     autoencoder_model = tf.keras.models.Sequential([encoder_model, decoder_model], name='AAE_autoencoder')
     encoder_discriminator_model = tf.keras.models.Sequential([encoder_model, discriminator_model],
                                                              name='AAE_encoder_discriminator')
