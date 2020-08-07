@@ -37,6 +37,16 @@ def show_noise_example(aae_noise, dcgan_noise, show=True, save=False):
     plt.close('all')
 
 
+def plot_visual_inspection(images, rows, cols, name):
+    plt.suptitle("Output of {}".format(name))
+    for i in range(images.shape[0]):
+        plt.subplot(x_ax, y_ax, 1 + i)
+        plt.xticks([])
+        plt.yticks([])
+        plt.imshow(images[i], cmap='gray_r')
+    plt.show()
+    plt.close('all')
+
 """ SET GLOBAL VARIABLES AND CONSTANTS """
 tf.random.set_seed(1)
 
@@ -143,56 +153,23 @@ aae = tf.keras.models.Sequential([models['AAE_encoder'], models['AAE_decoder']],
 out = aae(aae_noise).numpy()
 x_ax = int(math.sqrt(out.shape[0]))
 y_ax = x_ax
-plt.suptitle("Output of {}".format(aae.name))
-for i in range(out.shape[0]):
-    plt.subplot(x_ax, y_ax, 1 + i)
-    plt.xticks([])
-    plt.yticks([])
-    plt.imshow(out[i], cmap='gray_r')
-plt.show()
-plt.close('all')
+plot_visual_inspection(out, x_ax, y_ax, aae.name)
 
 emnist_aae = tf.keras.Sequential([models['EMNIST_AAE_encoder'], models['EMNIST_AAE_decoder']], name='EMNIST_AAE')
 out = emnist_aae(aae_noise).numpy()
-x_ax = int(math.sqrt(out.shape[0]))
-y_ax = x_ax
-plt.suptitle("Output of {}".format(emnist_aae.name))
-for i in range(out.shape[0]):
-    plt.subplot(x_ax, y_ax, 1 + i)
-    plt.xticks([])
-    plt.yticks([])
-    plt.imshow(out[i], cmap='gray_r')
-plt.show()
-plt.close('all')
+print()
+plot_visual_inspection(out, x_ax, y_ax, emnist_aae.name)
 
 dcgan_generator = models['DCGAN_generator']
 dcgan_discriminator = models['DCGAN_discriminator']
 out = dcgan_generator(dcgan_noise).numpy()
 out = out.reshape(out.shape[0], out.shape[1], out.shape[2])
-x_ax = int(math.sqrt(out.shape[0]))
-y_ax = x_ax
-plt.suptitle("Output of {}".format(dcgan_generator.name))
-for i in range(out.shape[0]):
-    plt.subplot(x_ax, y_ax, 1 + i)
-    plt.xticks([])
-    plt.yticks([])
-    plt.imshow(out[i], cmap='gray_r')
-plt.show()
-plt.close('all')
+plot_visual_inspection(out, x_ax, y_ax, dcgan_generator.name)
 
 emnist_dcgan_generator = models['EMNIST_DCGAN_generator']
 emnist_dcgan_discriminator = models['EMNIST_DCGAN_discriminator']
 out = emnist_dcgan_generator(dcgan_noise).numpy()
 out = out.reshape(out.shape[0], out.shape[1], out.shape[2])
-x_ax = int(math.sqrt(out.shape[0]))
-y_ax = x_ax
-plt.suptitle("Output of {}".format(emnist_dcgan_generator.name))
-for i in range(out.shape[0]):
-    plt.subplot(x_ax, y_ax, 1 + i)
-    plt.xticks([])
-    plt.yticks([])
-    plt.imshow(out[i], cmap='gray_r')
-plt.show()
-plt.close('all')
+plot_visual_inspection(out, x_ax, y_ax, emnist_dcgan_generator.name)
 
 """ ERRORS RATE """
