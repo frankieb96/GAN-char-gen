@@ -2,11 +2,54 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from scipy.io import loadmat
+from tabulate import tabulate
 import os
 
 
-def train_DCGAN(gan_model, generator_model, discriminator_model, dataset, total_batches, latent_dimension=100, batch_size=32,
-                n_epochs=10, path='temp_project/', verbose=True, save=True):
+def get_MNIST(normalize=True):
+    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+    if normalize:
+        x_train = (x_train / 255).astype(np.float32)
+        x_test = (x_test / 255).astype(np.float32)
+    return (x_train, y_train), (x_test, y_test)
+
+
+def get_EMNIST(path='temp_project/matlab/', datatype='emnist-letters', normalize=True):
+    mat = loadmat(path + "{}.mat".format(datatype))
+    data = mat['dataset']
+    x_train = data['train'][0, 0]['images'][0, 0]
+    y_train = data['train'][0, 0]['labels'][0, 0]
+    x_test = data['test'][0, 0]['images'][0, 0]
+    y_test = data['test'][0, 0]['labels'][0, 0]
+
+    x_train = x_train.reshape((x_train.shape[0], 28, 28, 1), order='F')
+    y_train = y_train.reshape(y_train.shape[0])
+    x_test = x_test.reshape((x_test.shape[0], 28, 28, 1), order='F')
+    y_test = y_test.reshape(y_test.shape[0])
+
+    if normalize:
+        x_train = (x_train / 255).astype(np.float32)
+        x_test = (x_test / 255).astype(np.float32)
+
+    return (x_train, y_train), (x_test, y_test)
+
+
+def print_memory_footprint(x_train, y_train, x_test, y_test):
+    print("Memory footprint:\n")
+    mb = lambda b: "{:.2f}".format(b / (1042 ** 2))
+    headers = ["", "", "shape", "data type", "bytes", "Megabytes"]
+    table = [["Training set", "x_train", x_train.shape, x_train.dtype, x_train.nbytes, mb(x_train.nbytes)],
+             ["", "y_train", y_train.shape, y_train.dtype, y_train.nbytes, mb(y_train.nbytes)],
+             [],
+             ["Test set", "x_test", x_test.shape, x_test.dtype, x_test.nbytes, mb(x_test.nbytes)],
+             ["", "y_test", y_test.shape, y_test.dtype, y_test.nbytes, mb(y_test.nbytes)]]
+    print(tabulate(table, headers=headers))
+    print("")
+
+
+def train_DCGAN(gan_model, generator_model, discriminator_model, dataset, total_batches, latent_dimension=100,
+                batch_size=32, n_epochs=10, path='temp_project/', verbose=True, save=True):
     # create an history object to save discriminator loss over the epochs
     epoch_history = np.zeros(n_epochs)
     epoch_index = 0
@@ -48,7 +91,7 @@ def train_DCGAN(gan_model, generator_model, discriminator_model, dataset, total_
             plt.close('all')
     print("Training complete.")
     if save:
-        print("Saving the models...", end= ' ')
+        print("Saving the models...", end=' ')
         generator_model.save(path + gan_model.name + "/" + generator_model.name)
         discriminator_model.save(path + gan_model.name + "/" + discriminator_model.name)
         epoch_history.tofile(path + gan_model.name + "/discriminator_history")
@@ -57,12 +100,12 @@ def train_DCGAN(gan_model, generator_model, discriminator_model, dataset, total_
 
 
 def train_AAE(encoder_model, decoder_model, discriminator_model, autoencoder_model, encoder_discriminator_model,
-              dataset, path, total_batches, img_shape=(28,28), batch_size=32, n_epochs=10, verbose=True, save=True):
+              dataset, path, total_batches, img_shape=(28, 28), batch_size=32, n_epochs=10, verbose=True, save=True):
     # create an history object to save discriminator loss over the epochs
     # note: discriminator and encoder_discriminator have ['loss', 'accuracy'] metrics
     epoch_history_discriminator = np.zeros([n_epochs, 2])
-    epoch_history_encdiscr = np.zeros(n_epochs)
-    epoch_history_autoenc = np.zeros([n_epochs, 2])
+    epoch_history_encdiscr = np.zeros([n_epochs, 2])
+    epoch_history_autoenc = np.zeros(n_epochs)
     epoch_index = 0
     for epoch in range(n_epochs):
         local_index = 0
@@ -72,7 +115,6 @@ def train_AAE(encoder_model, decoder_model, discriminator_model, autoencoder_mod
 
         print("Epoch number", epoch + 1, "of", n_epochs, flush=True)
         for x_batch in tqdm(dataset, unit='batch', total=total_batches):
-
             # train the discriminator
             noise = tf.random.normal(shape=[batch_size, img_shape[0], img_shape[1]])
             latent_real = encoder_model(noise)
@@ -96,8 +138,10 @@ def train_AAE(encoder_model, decoder_model, discriminator_model, autoencoder_mod
             local_index += 1
 
         # all are either in form ('loss', 'accuracy') or simply 'loss'
-        epoch_history_discriminator[epoch_index] = [np.average(discriminator_local_history[:,0]), np.average(discriminator_local_history[:,1])]
-        epoch_history_encdiscr[epoch_index] = [np.average(encdiscr_local_history[:,0]), np.average(encdiscr_local_history[:,1])]
+        epoch_history_discriminator[epoch_index] = np.array(
+            [np.average(discriminator_local_history[:, 0]), np.average(discriminator_local_history[:, 1])])
+        epoch_history_encdiscr[epoch_index] = np.array(
+            [np.average(encdiscr_local_history[:, 0]), np.average(encdiscr_local_history[:, 1])])
         epoch_history_autoenc[epoch_index] = np.average(autoencoder_local_history)
 
         epoch_index += 1
@@ -121,9 +165,5 @@ def train_AAE(encoder_model, decoder_model, discriminator_model, autoencoder_mod
         discriminator_model.save(path + discriminator_model.name)
         encoder_model.save(path + encoder_model.name)
         decoder_model.save(path + decoder_model.name)
-        epoch_history_encdiscr.tofile(path + "/autoencoder_history")
-        epoch_history_discriminator.tofile(path + "/discriminator_history")
-        epoch_history_autoenc.tofile(path + "/autoencoder_history")
-        print("done.")
+        np.savez(path + "training", autoenc=epoch_history_autoenc, encdiscr=epoch_history_encdiscr, discr=epoch_history_discriminator)
     return epoch_history_autoenc, epoch_history_discriminator, epoch_history_encdiscr
-

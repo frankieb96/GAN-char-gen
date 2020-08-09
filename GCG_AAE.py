@@ -65,26 +65,11 @@ PATH = "temp_project/AAE/"
 
 """ LOADING DATASET """
 print("\nLoading MNIST dataset...", end=' ')
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-print("done.")
-
-""" NORMALIZATION """
-print("Normalizing data...", end=' ')
-x_train = (x_train / 255).astype(np.float32)
-x_test = (x_test / 255).astype(np.float32)
+(x_train, y_train), (x_test, y_test) = GCG_utils.get_MNIST()
 print("done.")
 
 # see memory footprint
-print("Memory footprint:\n")
-mb = lambda b: "{:.2f}".format(b / (1042 ** 2))
-headers = ["", "", "shape", "data type", "bytes", "Megabytes"]
-table = [["Training set", "x_train", x_train.shape, x_train.dtype, x_train.nbytes, mb(x_train.nbytes)],
-         ["", "y_train", y_train.shape, y_train.dtype, y_train.nbytes, mb(y_train.nbytes)],
-         [],
-         ["Test set", "x_test", x_test.shape, x_test.dtype, x_test.nbytes, mb(x_test.nbytes)],
-         ["", "y_test", y_test.shape, y_test.dtype, y_test.nbytes, mb(y_test.nbytes)]]
-print(tabulate(table, headers=headers))
-print("")
+GCG_utils.print_memory_footprint(x_train, y_train, x_test, y_test)
 
 """ BUILDING THE MODELS """
 print("Building the AAE model...", end=' ')
@@ -126,8 +111,16 @@ if not os.path.exists("temp_project/AAE"):
     os.makedirs(PATH + encoder_model.name)
     os.makedirs(PATH + decoder_model.name)
     os.makedirs(PATH + "train_images/")
-    GCG_utils.train_AAE(encoder_model, decoder_model, discriminator_model, autoencoder_model, encoder_discriminator_model,
-                        dataset, path=PATH, total_batches=int(x_train.shape[0] / batch_size), n_epochs=n_epochs)
+    epoch_history_autoenc, epoch_history_discriminator, epoch_history_encdiscr = GCG_utils.train_AAE(encoder_model,
+                                                                                                     decoder_model,
+                                                                                                     discriminator_model,
+                                                                                                     autoencoder_model,
+                                                                                                     encoder_discriminator_model,
+                                                                                                     dataset, path=PATH,
+                                                                                                     total_batches=int(
+                                                                                                         x_train.shape[
+                                                                                                             0] / batch_size),
+                                                                                                     n_epochs=n_epochs)
 else:
     print("Folder '{}' has been found: loading model, no need to retrain.".format(PATH))
     discriminator_model = tf.keras.models.load_model(PATH + discriminator_model.name)
@@ -136,8 +129,21 @@ else:
     autoencoder_model = tf.keras.models.Sequential([encoder_model, decoder_model], name='AAE_autoencoder')
     encoder_discriminator_model = tf.keras.models.Sequential([encoder_model, discriminator_model],
                                                              name='AAE_encoder_discriminator')
+    with np.load(PATH + "training.npz") as load:
+        epoch_history_autoenc = load['autoenc']
+        epoch_history_discriminator = load['discr']
+        epoch_history_encdiscr = load['encdiscr']
 
 """ SEE RESULTS """
+# plot losses
+print(epoch_history_encdiscr.shape)
+print(epoch_history_discriminator.shape)
+print(epoch_history_autoenc.shape)
+plt.plot(epoch_history_encdiscr[:,0])
+plt.show()
+plt.close('all')
+exit()
+
 # plot images
 for i in range(5):
     noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
