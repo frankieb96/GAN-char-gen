@@ -97,7 +97,8 @@ encoder_discriminator_model = tf.keras.models.Sequential([encoder_model, discrim
 
 discriminator_model.compile(
     optimizer='adam',
-    loss='binary_crossentropy'
+    loss='binary_crossentropy',
+    metrics=['accuracy']
 )
 discriminator_model.trainable = False
 
@@ -110,7 +111,8 @@ autoencoder_model.compile(
 encoder_discriminator_model.compile(
     optimizer='adam',
     loss='binary_crossentropy',
-    loss_weights=[0.01]
+    loss_weights=[0.01],
+    metrics=['accuracy']
 )
 print("done.", flush=True)
 
