@@ -15,7 +15,7 @@ def get_MNIST(normalize=True):
     return (x_train, y_train), (x_test, y_test)
 
 
-def get_EMNIST(path='temp_project/matlab/', datatype='emnist-letters', normalize=True):
+def get_EMNIST(conv_reshape, path='temp_project/matlab/', datatype='emnist-letters', normalize=True):
     mat = loadmat(path + "{}.mat".format(datatype))
     data = mat['dataset']
     x_train = data['train'][0, 0]['images'][0, 0]
@@ -23,11 +23,15 @@ def get_EMNIST(path='temp_project/matlab/', datatype='emnist-letters', normalize
     x_test = data['test'][0, 0]['images'][0, 0]
     y_test = data['test'][0, 0]['labels'][0, 0]
 
-    x_train = x_train.reshape((x_train.shape[0], 28, 28, 1), order='F')
     y_train = y_train.reshape(y_train.shape[0])
-    x_test = x_test.reshape((x_test.shape[0], 28, 28, 1), order='F')
     y_test = y_test.reshape(y_test.shape[0])
 
+    if conv_reshape:
+        x_train = x_train.reshape((x_train.shape[0], 28, 28, 1), order='F')
+        x_test = x_test.reshape((x_test.shape[0], 28, 28, 1), order='F')
+    else:
+        x_train = x_train.reshape((x_train.shape[0], 28, 28), order='F')
+        x_test = x_test.reshape((x_test.shape[0], 28, 28), order='F')
     if normalize:
         x_train = (x_train / 255).astype(np.float32)
         x_test = (x_test / 255).astype(np.float32)

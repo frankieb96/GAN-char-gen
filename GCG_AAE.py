@@ -79,7 +79,7 @@ print("\nLoading {} dataset...".format(DATASET), end=' ')
 if DATASET == 'MNIST':
     (x_train, y_train), (x_test, y_test) = GCG_utils.get_MNIST()
 elif DATASET == 'EMNIST':
-    (x_train, y_train), (x_test, y_test) = GCG_utils.get_EMNIST()
+    (x_train, y_train), (x_test, y_test) = GCG_utils.get_EMNIST(conv_reshape=False)
 else:
     raise ValueError("Don't know {} dataset. Program now quits.".format(DATASET))
 print("done.")
@@ -185,7 +185,7 @@ plt.xlabel("Epochs")
 plt.ylabel("Accuracy")
 
 plt.show()
-exit()
+
 # plot images
 for i in range(5):
     noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
