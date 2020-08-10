@@ -77,7 +77,7 @@ print("PARAMS are: ", [NAME, DATASET])
 """ LOADING DATASET """
 print("\nLoading {} dataset...".format(DATASET), end=' ')
 if DATASET == 'MNIST':
-    (x_train, y_train), (x_test, y_test) = GCG_utils.get_MNIST()
+    (x_train, y_train), (x_test, y_test) = GCG_utils.get_MNIST(conv_reshape=False)
 elif DATASET == 'EMNIST':
     (x_train, y_train), (x_test, y_test) = GCG_utils.get_EMNIST(conv_reshape=False)
 else:

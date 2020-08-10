@@ -7,8 +7,11 @@ from tabulate import tabulate
 import os
 
 
-def get_MNIST(normalize=True):
+def get_MNIST(conv_reshape, normalize=True):
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+    if conv_reshape:
+        x_train = x_train.reshape((x_train.shape[0], 28, 28, 1))
+        x_test = x_test.reshape((x_test.shape[0], 28, 28, 1))
     if normalize:
         x_train = (x_train / 255).astype(np.float32)
         x_test = (x_test / 255).astype(np.float32)
@@ -55,11 +58,14 @@ def print_memory_footprint(x_train, y_train, x_test, y_test):
 def train_DCGAN(gan_model, generator_model, discriminator_model, dataset, total_batches, latent_dimension=100,
                 batch_size=32, n_epochs=10, path='temp_project/', verbose=True, save=True):
     # create an history object to save discriminator loss over the epochs
-    epoch_history = np.zeros(n_epochs)
+    # both have format ['loss', 'accuracy']
+    epoch_history_discriminator = np.zeros([n_epochs,2])
+    epoch_history_gan = np.zeros([n_epochs,2])
     epoch_index = 0
     for epoch in range(n_epochs):
         local_index = 0
-        local_history = np.zeros(total_batches)
+        local_discr_history = np.zeros([total_batches, 2])
+        local_gan_history = np.zeros([total_batches, 2])
         print("Epoch number", epoch + 1, "of", n_epochs, flush=True)
         for x_batch in tqdm(dataset, unit='batch', total=total_batches):
             # train the discriminator
@@ -68,17 +74,22 @@ def train_DCGAN(gan_model, generator_model, discriminator_model, dataset, total_
             x_tot = tf.concat([fake_images, x_batch], axis=0)
             y1 = tf.constant([[0.]] * batch_size + [[1.]] * batch_size)
             discriminator_model.trainable = True
-            discriminator_loss = discriminator_model.train_on_batch(x_tot, y1)
-            local_history[local_index] = discriminator_loss
-            local_index += 1
+            loss_acc = discriminator_model.train_on_batch(x_tot, y1)
+            local_discr_history[local_index] = loss_acc
             discriminator_model.trainable = False
 
             # train the generator
             noise = tf.random.normal(shape=[batch_size, latent_dimension])
             y2 = tf.constant([[1.]] * batch_size)
-            gan_model.train_on_batch(noise, y2)
+            loss_acc = gan_model.train_on_batch(noise, y2)
+            local_gan_history[local_index] = loss_acc
 
-        epoch_history[epoch_index] = np.average(local_history)
+            local_index += 1
+
+        epoch_history_discriminator[epoch_index] = np.array(
+            [np.average(local_discr_history[:, 0]), np.average(local_discr_history[:, 1])])
+        epoch_history_gan[epoch_index] = np.array(
+            [np.average(local_gan_history[:, 0]), np.average(local_gan_history[:, 1])])
         epoch_index += 1
 
         if save:
@@ -91,16 +102,16 @@ def train_DCGAN(gan_model, generator_model, discriminator_model, dataset, total_
                 plt.subplot(5, 5, 1 + local_index)
                 plt.axis('off')
                 plt.imshow(fake_images[local_index], cmap='gray_r')
-            plt.savefig(path + gan_model.name + "/train_images/train_epoch_{}".format(epoch + 1))
+            plt.savefig(path + "train_images/train_epoch_{}".format(epoch + 1))
             plt.close('all')
     print("Training complete.")
     if save:
         print("Saving the models...", end=' ')
-        generator_model.save(path + gan_model.name + "/" + generator_model.name)
-        discriminator_model.save(path + gan_model.name + "/" + discriminator_model.name)
-        epoch_history.tofile(path + gan_model.name + "/discriminator_history")
+        generator_model.save(path + generator_model.name)
+        discriminator_model.save(path + discriminator_model.name)
+        np.savez(path + "training", discr=epoch_history_discriminator, gan=epoch_history_gan)
         print("done.")
-    return epoch_history
+    return epoch_history_discriminator, epoch_history_gan
 
 
 def train_AAE(encoder_model, decoder_model, discriminator_model, autoencoder_model, encoder_discriminator_model,
@@ -170,4 +181,5 @@ def train_AAE(encoder_model, decoder_model, discriminator_model, autoencoder_mod
         encoder_model.save(path + encoder_model.name)
         decoder_model.save(path + decoder_model.name)
         np.savez(path + "training", autoenc=epoch_history_autoenc, encdiscr=epoch_history_encdiscr, discr=epoch_history_discriminator)
+        print("done.")
     return epoch_history_autoenc, epoch_history_discriminator, epoch_history_encdiscr
