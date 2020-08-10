@@ -62,7 +62,7 @@ tf.random.set_seed(1)
 latent_dimension = 10
 img_shape = (28, 28)
 batch_size = 32
-n_epochs = 3
+n_epochs = 10
 if len(sys.argv) < 3:
     print("WARNING: not enough input params. Resorting to default params. Usage is 'AAE-name' 'dataset'",
           file=sys.stderr)
@@ -96,25 +96,27 @@ autoencoder_model = tf.keras.models.Sequential([encoder_model, decoder_model], n
 encoder_discriminator_model = tf.keras.models.Sequential([encoder_model, discriminator_model],
                                                          name='{}_encoder_discriminator'.format(NAME))
 
+optimizer = tf.keras.optimizers.Adam(0.0002, 0.5)
 discriminator_model.compile(
-    optimizer='adam',
+    optimizer=optimizer,
     loss='binary_crossentropy',
     metrics=['accuracy']
 )
 discriminator_model.trainable = False
 
 autoencoder_model.compile(
-    optimizer='adam',
-    loss='mse',
+    optimizer=optimizer,
+    loss=['mse'],
     loss_weights=[0.99]
 )
 
 encoder_discriminator_model.compile(
-    optimizer='adam',
-    loss='binary_crossentropy',
+    optimizer=optimizer,
+    loss=['binary_crossentropy'],
     loss_weights=[0.01],
     metrics=['accuracy']
 )
+
 print("done.", flush=True)
 
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """

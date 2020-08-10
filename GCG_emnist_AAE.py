@@ -1,3 +1,5 @@
+import sys
+
 from scipy.io import loadmat
 import os
 from tabulate import tabulate
@@ -55,58 +57,41 @@ def AAE_build_discriminator(latent_dim=100, name='EMNIST_AAE_discriminator'):
 """ ---------------------------------------------------------- """
 
 DATA_TYPE = "emnist-letters"
-PATH = "temp_project/EMNIST_AAE/"
 tf.random.set_seed(1)
 latent_dimension = 10
 batch_size = 32
 n_epochs = 3
+if len(sys.argv) < 3:
+    print("WARNING: not enough input params. Resorting to default params. Usage is 'AAE-name' 'dataset'",
+          file=sys.stderr)
+    NAME = "EMNIST_AAE"
+    DATASET = "EMNIST"
+else:
+    NAME = sys.argv[1]
+    DATASET = sys.argv[2]
+PATH = "temp_project/{}/".format(NAME)
+print("PARAMS are: ", [NAME, DATASET])
 
 print("Loading data {}...".format(DATA_TYPE), end=' ')
-mat = loadmat("temp_project/matlab/{}.mat".format(DATA_TYPE))
-data = mat['dataset']
-x_train = data['train'][0, 0]['images'][0, 0]
-y_train = data['train'][0, 0]['labels'][0, 0]
-x_test = data['test'][0, 0]['images'][0, 0]
-y_test = data['test'][0, 0]['labels'][0, 0]
-
-x_train = x_train.reshape((x_train.shape[0], 28, 28), order='F')
-y_train = y_train.reshape(y_train.shape[0])
-x_test = x_test.reshape((x_test.shape[0], 28, 28), order='F')
-y_test = y_test.reshape(y_test.shape[0])
-print("done.")
-
-""" NORMALIZATION """
-print("Normalizing data...", end=' ')
-x_train = (x_train / 255).astype(np.float32)
-x_test = (x_test / 255).astype(np.float32)
-print("done.")
+(x_train, y_train), (x_test, y_test) = GCG_utils.get_EMNIST(conv_reshape=False)
 
 # see memory footprint
-print("Memory footprint:")
-mb = lambda b: "{:.2f}".format(b / (1042 ** 2))
-headers = ["", "", "shape", "data type", "bytes", "Megabytes"]
-table = [["Training set", "x_train", x_train.shape, x_train.dtype, x_train.nbytes, mb(x_train.nbytes)],
-         ["", "y_train", y_train.shape, y_train.dtype, y_train.nbytes, mb(y_train.nbytes)],
-         [],
-         ["Test set", "x_test", x_test.shape, x_test.dtype, x_test.nbytes, mb(x_test.nbytes)],
-         ["", "y_test", y_test.shape, y_test.dtype, y_test.nbytes, mb(y_test.nbytes)]]
-print(tabulate(table, headers=headers))
-print("")
+GCG_utils.print_memory_footprint(x_train, y_train, x_test, y_test)
 
 """ BUILDING THE MODELS """
 print("Building the AAE model...", end=' ')
 img_shape = (28, 28)
-encoder_model = AAE_build_encoder(img_shape, latent_dimension)
-decoder_model = AAE_build_decoder(img_shape, latent_dimension)
-discriminator_model = AAE_build_discriminator(latent_dimension)
-autoencoder_model = tf.keras.models.Sequential([encoder_model, decoder_model], name='AAE_autoencoder')
+encoder_model = AAE_build_encoder(img_shape, latent_dimension, name='{}_encoder'.format(NAME))
+decoder_model = AAE_build_decoder(img_shape, latent_dimension, name='{}_decoder'.format(NAME))
+discriminator_model = AAE_build_discriminator(latent_dimension, name='{}_discriminator'.format(NAME))
+autoencoder_model = tf.keras.models.Sequential([encoder_model, decoder_model], name='{}_autoencoder'.format(NAME))
 encoder_discriminator_model = tf.keras.models.Sequential([encoder_model, discriminator_model],
-                                                         name='AAE_encoder_discriminator')
+                                                         name='{}_encoder_discriminator'.format(NAME))
 optimizer = tf.keras.optimizers.Adam(0.0002, 0.5)
 discriminator_model.compile(
     optimizer=optimizer,
-    loss='binary_crossentropy'
-    #metrics=['accuracy']
+    loss='binary_crossentropy',
+    metrics=['accuracy']
 )
 discriminator_model.trainable = False
 
@@ -119,12 +104,12 @@ autoencoder_model.compile(
 encoder_discriminator_model.compile(
     optimizer=optimizer,
     loss=['binary_crossentropy'],
-    loss_weights=[0.01]
+    loss_weights=[0.01],
+    metrics=['accuracy']
 )
 print("done.", flush=True)
 
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
-end_epoch_noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
 if not os.path.exists(PATH):
@@ -134,29 +119,65 @@ if not os.path.exists(PATH):
     os.makedirs(PATH + encoder_model.name)
     os.makedirs(PATH + decoder_model.name)
     os.makedirs(PATH + "train_images/")
-    GCG_utils.train_AAE(encoder_model, decoder_model, discriminator_model, autoencoder_model, encoder_discriminator_model,
+    epoch_history_autoenc, epoch_history_discriminator, epoch_history_encdiscr = GCG_utils.train_AAE(encoder_model, decoder_model, discriminator_model, autoencoder_model, encoder_discriminator_model,
                         dataset, path=PATH, total_batches=int(x_train.shape[0] / batch_size), n_epochs=n_epochs)
 else:
     print("Folder '{}' has been found: loading model, no need to retrain.".format(PATH))
     discriminator_model = tf.keras.models.load_model(PATH + discriminator_model.name)
     encoder_model = tf.keras.models.load_model(PATH + encoder_model.name)
     decoder_model = tf.keras.models.load_model(PATH + decoder_model.name)
-    autoencoder_model = tf.keras.models.Sequential([encoder_model, decoder_model], name='AAE_autoencoder')
+    autoencoder_model = tf.keras.models.Sequential([encoder_model, decoder_model], name='{}_autoencoder'.format(NAME))
     encoder_discriminator_model = tf.keras.models.Sequential([encoder_model, discriminator_model],
-                                                             name='AAE_encoder_discriminator')
+                                                             name='{}_encoder_discriminator'.format(NAME))
+    with np.load(PATH + "training.npz") as load:
+        epoch_history_autoenc = load['autoenc']  # loss
+        epoch_history_discriminator = load['discr']  # loss, accuracy
+        epoch_history_encdiscr = load['encdiscr']  # loss, accuracy
 
 """ SEE RESULTS """
+# plot losses
+plt.figure(figsize=(16, 5))
+plt.subplot(1, 3, 1)
+plt.plot(epoch_history_encdiscr[:, 0])
+plt.title("{} loss".format(encoder_discriminator_model.name))
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
+plt.subplot(1, 3, 2)
+plt.plot(epoch_history_discriminator[:, 0])
+plt.title("{} loss".format(discriminator_model.name))
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
+plt.subplot(1, 3, 3)
+plt.plot(epoch_history_autoenc)
+plt.title("{} loss".format(autoencoder_model.name))
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
+
+plt.show()
+
+# plot accuracies
+plt.figure(figsize=(16, 5))
+plt.subplot(1, 2, 1)
+plt.plot(epoch_history_encdiscr[:, 1])
+plt.title("{} accuracy".format(encoder_discriminator_model.name))
+plt.xlabel("Epochs")
+plt.ylabel("Accuracy")
+plt.subplot(1, 2, 2)
+plt.plot(epoch_history_discriminator[:, 1])
+plt.title("{} accuracy".format(discriminator_model.name))
+plt.xlabel("Epochs")
+plt.ylabel("Accuracy")
+
+plt.show()
+
 # plot images
-for j in range(5):
-    noise = tf.random.normal(shape=[5, img_shape[0], img_shape[1]])
+for i in range(5):
+    noise = tf.random.normal(shape=[25, img_shape[0], img_shape[1]])
     latent_real = autoencoder_model(noise).numpy()
     # plot images
-    for i in range(5):
+    for i in range(25):
         # define subplot
-        plt.subplot(2, 5, 1 + i)
-        plt.axis('off')
-        plt.imshow(noise.numpy()[i].reshape((28, 28)), cmap='gray_r')
-        plt.subplot(2, 5, 6 + i)
+        plt.subplot(5, 5, 1 + i)
         plt.axis('off')
         plt.imshow(latent_real[i].reshape((28, 28)), cmap='gray_r')
     plt.show()  # see the results
