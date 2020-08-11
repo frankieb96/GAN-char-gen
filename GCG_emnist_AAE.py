@@ -60,11 +60,11 @@ DATA_TYPE = "emnist-letters"
 tf.random.set_seed(1)
 latent_dimension = 10
 batch_size = 32
-n_epochs = 3
+n_epochs = 30
 if len(sys.argv) < 3:
     print("WARNING: not enough input params. Resorting to default params. Usage is 'AAE-name' 'dataset'",
           file=sys.stderr)
-    NAME = "EMNIST_AAE"
+    NAME = "E_AAE"
     DATASET = "EMNIST"
 else:
     NAME = sys.argv[1]
