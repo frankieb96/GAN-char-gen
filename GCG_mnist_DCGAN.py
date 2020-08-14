@@ -1,3 +1,11 @@
+"""
+Author: Francesco Bianco
+Student number: 1234358
+Email: francesco.bianco.5@studenti.unipd.it
+
+Program file GCG_mnist_DCGAN.py
+"""
+
 import os
 import sys
 import numpy as np
@@ -12,7 +20,8 @@ def DCGAN_build_generator(latent_dimension=100, name='_generator'):
     layers = tf.keras.layers.Dense(7 * 7 * 128)(layer_input)
     layers = tf.keras.layers.Reshape([7, 7, 128])(layers)
     layers = tf.keras.layers.BatchNormalization()(layers)
-    layers = tf.keras.layers.Conv2DTranspose(64, kernel_size=5, strides=2, padding='same', activation='selu', kernel_initializer='lecun_normal')(layers)
+    layers = tf.keras.layers.Conv2DTranspose(64, kernel_size=5, strides=2, padding='same', activation='selu',
+                                             kernel_initializer='lecun_normal')(layers)
     layers = tf.keras.layers.Conv2DTranspose(1, kernel_size=5, strides=2, padding='same', activation='tanh')(layers)
 
     # the output has shape (28, 28, 1)
@@ -95,7 +104,11 @@ if not os.path.exists(PATH):
     os.makedirs(PATH + discriminator_model.name)
     os.makedirs(PATH + generator_model.name)
     os.makedirs(PATH + "train_images/")
-    epoch_history_discriminator, epoch_history_gan = GCG_utils.train_DCGAN(gan_model, generator_model, discriminator_model, dataset, int(x_train.shape[0] / batch_size), latent_dimension, batch_size, n_epochs, path=PATH)
+    epoch_history_discriminator, epoch_history_gan = GCG_utils.train_DCGAN(gan_model, generator_model,
+                                                                           discriminator_model, dataset,
+                                                                           int(x_train.shape[0] / batch_size),
+                                                                           latent_dimension, batch_size, n_epochs,
+                                                                           path=PATH)
 
 else:
     print("Folder '{}' has been found: loading model, no need to retrain.".format(NAME))
@@ -105,7 +118,6 @@ else:
     with np.load(PATH + "training.npz") as load:
         epoch_history_discriminator = load['discr']  # loss, accuracy
         epoch_history_gan = load['gan']  # loss, accuracy
-
 
 """ SEE RESULTS """
 # plot losses

@@ -1,3 +1,11 @@
+"""
+Author: Francesco Bianco
+Student number: 1234358
+Email: francesco.bianco.5@studenti.unipd.it
+
+Program file GCG_utils.py
+"""
+
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt

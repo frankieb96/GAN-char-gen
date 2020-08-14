@@ -1,10 +1,17 @@
+"""
+Author: Francesco Bianco
+Student number: 1234358
+Email: francesco.bianco.5@studenti.unipd.it
+
+Program file GCG_emnist_DCGAN.py
+"""
+
 import sys
 import os
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import GCG_utils
-
 
 """ GENERATOR/DISCRIMINATOR MODEL CREATOR FUNCTIONS """
 
@@ -92,7 +99,6 @@ gan_model.compile(
 )
 print("done.", flush=True)
 
-
 """ TRAIN THE MODEL IF IT DOES NOT EXIST """
 dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(1000)
 dataset = dataset.batch(batch_size, drop_remainder=True).prefetch(1000)
@@ -102,7 +108,11 @@ if not os.path.exists(PATH):
     os.makedirs(PATH + discriminator_model.name)
     os.makedirs(PATH + generator_model.name)
     os.makedirs(PATH + "train_images/")
-    epoch_history_discriminator, epoch_history_gan = GCG_utils.train_DCGAN(gan_model, generator_model, discriminator_model, dataset, int(x_train.shape[0] / batch_size), latent_dimension, batch_size, n_epochs, path=PATH)
+    epoch_history_discriminator, epoch_history_gan = GCG_utils.train_DCGAN(gan_model, generator_model,
+                                                                           discriminator_model, dataset,
+                                                                           int(x_train.shape[0] / batch_size),
+                                                                           latent_dimension, batch_size, n_epochs,
+                                                                           path=PATH)
 
 else:
     print("Folder '{}' has been found: loading model, no need to retrain.".format(NAME))
@@ -112,7 +122,6 @@ else:
     with np.load(PATH + "training.npz") as load:
         epoch_history_discriminator = load['discr']  # loss, accuracy
         epoch_history_gan = load['gan']  # loss, accuracy
-
 
 """ SEE RESULTS """
 # plot losses

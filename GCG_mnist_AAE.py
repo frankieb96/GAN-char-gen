@@ -1,3 +1,11 @@
+"""
+Author: Francesco Bianco
+Student number: 1234358
+Email: francesco.bianco.5@studenti.unipd.it
+
+Program file GCG_mnist_AAE.py
+"""
+
 import os
 import sys
 import numpy as np

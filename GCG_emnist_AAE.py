@@ -1,3 +1,11 @@
+"""
+Author: Francesco Bianco
+Student number: 1234358
+Email: francesco.bianco.5@studenti.unipd.it
+
+Program file GCG_emnist_AAE.py
+"""
+
 import sys
 import os
 import numpy as np
@@ -115,8 +123,16 @@ if not os.path.exists(PATH):
     os.makedirs(PATH + encoder_model.name)
     os.makedirs(PATH + decoder_model.name)
     os.makedirs(PATH + "train_images/")
-    epoch_history_autoenc, epoch_history_discriminator, epoch_history_encdiscr = GCG_utils.train_AAE(encoder_model, decoder_model, discriminator_model, autoencoder_model, encoder_discriminator_model,
-                        dataset, path=PATH, total_batches=int(x_train.shape[0] / batch_size), n_epochs=n_epochs)
+    epoch_history_autoenc, epoch_history_discriminator, epoch_history_encdiscr = GCG_utils.train_AAE(encoder_model,
+                                                                                                     decoder_model,
+                                                                                                     discriminator_model,
+                                                                                                     autoencoder_model,
+                                                                                                     encoder_discriminator_model,
+                                                                                                     dataset, path=PATH,
+                                                                                                     total_batches=int(
+                                                                                                         x_train.shape[
+                                                                                                             0] / batch_size),
+                                                                                                     n_epochs=n_epochs)
 else:
     print("Folder '{}' has been found: loading model, no need to retrain.".format(PATH))
     discriminator_model = tf.keras.models.load_model(PATH + discriminator_model.name)
