@@ -1,7 +1,5 @@
 import os
 import sys
-
-from tabulate import tabulate
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt

@@ -1,12 +1,9 @@
 import os
 import sys
-
-from tabulate import tabulate
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import GCG_utils
-from tqdm import tqdm
 
 
 def AAE_build_encoder(img_shape=(28, 28), latent_dim=100, name='_encoder'):

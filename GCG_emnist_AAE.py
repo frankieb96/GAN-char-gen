@@ -1,12 +1,8 @@
 import sys
-
-from scipy.io import loadmat
 import os
-from tabulate import tabulate
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-
 import GCG_utils
 
 """ ENCODER/DECODER/DISCRIMINATOR MODEL CREATOR FUNCTIONS """
