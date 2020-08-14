@@ -4,10 +4,16 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from scipy.io import loadmat
 from tabulate import tabulate
-import os
 
 
 def get_MNIST(conv_reshape, normalize=True):
+    """
+    Loads and returns the MNIST dataset.
+
+    :param conv_reshape: if True, reshapes the images to 28x28x1 for convolutional layers, otherwise are 28x28
+    :param normalize: if True, already normalizes the images in [0, 1] as float32 numbers, else are 8 bit integers
+    :return: (x_train, y_train), (x_test, y_test)
+    """
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
     if conv_reshape:
         x_train = x_train.reshape((x_train.shape[0], 28, 28, 1))
@@ -19,6 +25,15 @@ def get_MNIST(conv_reshape, normalize=True):
 
 
 def get_EMNIST(conv_reshape, path='temp_project/matlab/', datatype='emnist-letters', normalize=True):
+    """
+    Loads and returns the EMNIST dataset.
+
+    :param conv_reshape: if True, reshapes the images to 28x28x1 for convolutional layers, otherwise are 28x28
+    :param path: a string to the path to the .mat files of the EMNIST dataset
+    :param datatype: the .mat file name (without extension). Default is 'emnist-letters'
+    :param normalize: if True, already normalizes the images in [0, 1] as float32 numbers, else are 8 bit integers
+    :return:
+    """
     mat = loadmat(path + "{}.mat".format(datatype))
     data = mat['dataset']
     x_train = data['train'][0, 0]['images'][0, 0]
@@ -43,6 +58,16 @@ def get_EMNIST(conv_reshape, path='temp_project/matlab/', datatype='emnist-lette
 
 
 def print_memory_footprint(x_train, y_train, x_test, y_test):
+    """
+    Prints the memory occupations of the dataset. Since the numpy arrays contains built-in types, this is a real
+    memory occupation.
+
+    :param x_train:
+    :param y_train:
+    :param x_test:
+    :param y_test:
+    :return:
+    """
     print("Memory footprint:\n")
     mb = lambda b: "{:.2f}".format(b / (1042 ** 2))
     headers = ["", "", "shape", "data type", "bytes", "Megabytes"]
@@ -57,10 +82,29 @@ def print_memory_footprint(x_train, y_train, x_test, y_test):
 
 def train_DCGAN(gan_model, generator_model, discriminator_model, dataset, total_batches, latent_dimension=100,
                 batch_size=32, n_epochs=10, path='temp_project/', verbose=True, save=True):
+    """
+    DCGAN training function.
+
+    :param gan_model:
+    :param generator_model:
+    :param discriminator_model:
+    :param dataset: the tf.Dataset object containing the input data
+    :param total_batches: the total number of batches in the dataset (for the tqdm)
+    :param latent_dimension: noise latent dimension of the generator. Default: 100
+    :param batch_size: the minibatch size. Default: 32
+    :param n_epochs: total number of training epochs. Default: 10
+    :param path: the main path where to save the results. Default: './temp_project/'. From the specified path, results
+    will be saved accordingly to the keras models 'name' parameter, plus a 'train_images' folder to store epochs ending
+    images, and a 'training' file containing the histories vectors.
+    :param verbose: unused.
+    :param save: if True, it saves the results on secondary memory.
+    :return: epoch_history_discriminator, epoch_history_gan, both as numpy arrays with loss in [:, 0] and accuracy in
+    [:, 1]
+    """
     # create an history object to save discriminator loss over the epochs
     # both have format ['loss', 'accuracy']
-    epoch_history_discriminator = np.zeros([n_epochs,2])
-    epoch_history_gan = np.zeros([n_epochs,2])
+    epoch_history_discriminator = np.zeros([n_epochs, 2])
+    epoch_history_gan = np.zeros([n_epochs, 2])
     epoch_index = 0
     for epoch in range(n_epochs):
         local_index = 0
@@ -116,6 +160,27 @@ def train_DCGAN(gan_model, generator_model, discriminator_model, dataset, total_
 
 def train_AAE(encoder_model, decoder_model, discriminator_model, autoencoder_model, encoder_discriminator_model,
               dataset, path, total_batches, img_shape=(28, 28), batch_size=32, n_epochs=10, verbose=True, save=True):
+    """
+    AAE training function.
+
+    :param encoder_model:
+    :param decoder_model:
+    :param discriminator_model:
+    :param autoencoder_model:
+    :param encoder_discriminator_model:
+    :param dataset: the tf.Dataset object containing the input data
+    :param path: the main path where to save the results. From the specified path, results
+    will be saved accordingly to the keras models 'name' parameter, plus a 'train_images' folder to store epochs ending
+    images, and a 'training' file containing the histories vectors.
+    :param total_batches: the total number of batches in the dataset (for the tqdm)
+    :param img_shape: the input image shape. Default: (28, 28)
+    :param batch_size: the minibatch size. Default: 32
+    :param n_epochs: total number of training epochs. Default: 10
+    :param verbose: unused.
+    :param save: if True, it saves the results on secondary memory.
+    :return: epoch_history_autoenc, epoch_history_discriminator, epoch_history_encdiscr, all as numpy arrays, the first
+     with just the loss and the other two with loss in [:, 0] and accuracy in [:, 1]
+    """
     # create an history object to save discriminator loss over the epochs
     # note: discriminator and encoder_discriminator have ['loss', 'accuracy'] metrics
     epoch_history_discriminator = np.zeros([n_epochs, 2])
@@ -180,6 +245,7 @@ def train_AAE(encoder_model, decoder_model, discriminator_model, autoencoder_mod
         discriminator_model.save(path + discriminator_model.name)
         encoder_model.save(path + encoder_model.name)
         decoder_model.save(path + decoder_model.name)
-        np.savez(path + "training", autoenc=epoch_history_autoenc, encdiscr=epoch_history_encdiscr, discr=epoch_history_discriminator)
+        np.savez(path + "training", autoenc=epoch_history_autoenc, encdiscr=epoch_history_encdiscr,
+                 discr=epoch_history_discriminator)
         print("done.")
     return epoch_history_autoenc, epoch_history_discriminator, epoch_history_encdiscr
