@@ -14,40 +14,35 @@ import matplotlib.pyplot as plt
 import GCG_utils
 
 
-def AAE_build_encoder(img_shape=(28, 28), latent_dim=100, name='_encoder'):
-    input_layer = tf.keras.Input(img_shape)
+def AAE_build_encoder(img_shape=(28, 28), latent_dimension=100, name='EMNIST_AAE_encoder'):
+    encoder_input = tf.keras.layers.Input(img_shape)
 
-    layers = tf.keras.layers.Flatten()(input_layer)
-    layers = tf.keras.layers.Dense(512)(layers)
-    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
-    layers = tf.keras.layers.Dense(512)(layers)
-    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
-    layers = tf.keras.layers.Dense(latent_dim)(layers)
-    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
+    encoder_sequence = tf.keras.layers.Flatten()(encoder_input)
+    encoder_sequence = tf.keras.layers.Dense(512)(encoder_sequence)
+    encoder_sequence = tf.keras.layers.LeakyReLU(alpha=0.2)(encoder_sequence)
+    encoder_sequence = tf.keras.layers.Dense(512)(encoder_sequence)
+    encoder_sequence = tf.keras.layers.LeakyReLU(alpha=0.2)(encoder_sequence)
+    latent_vector = tf.keras.layers.Dense(latent_dimension)(encoder_sequence)
 
-    model = tf.keras.Model(input_layer, layers, name=name)
-    return model
+    encoder_model = tf.keras.models.Model(encoder_input, latent_vector, name=name)
+    return encoder_model
 
 
-def AAE_build_decoder(img_shape=(28, 28), latent_dim=100, name='_decoder'):
+def AAE_build_decoder(img_shape=(28, 28), latent_dim=100, name='EMNIST_AAE_decoder'):
     input_layer = tf.keras.Input(latent_dim)
-    img_side = img_shape[0]
 
-    layers = tf.keras.layers.Flatten()(input_layer)
+    layers = tf.keras.layers.Dense(512, input_dim=latent_dimension)(input_layer)
+    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
     layers = tf.keras.layers.Dense(512)(layers)
     layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
-    layers = tf.keras.layers.Dense(512)(layers)
-    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
-    layers = tf.keras.layers.Dense(img_side ** 2)(layers)
-    layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
-    layers = tf.keras.layers.Activation('tanh')(layers)
-    layers = tf.keras.layers.Reshape((img_side, img_side))(layers)
+    layers = tf.keras.layers.Dense(np.prod(img_shape), activation='sigmoid')(layers)
+    layers = tf.keras.layers.Reshape(img_shape)(layers)
 
-    model = tf.keras.Model(input_layer, layers, name=name)
+    model = tf.keras.models.Model(input_layer, layers, name=name)
     return model
 
 
-def AAE_build_discriminator(latent_dim=100, name='_discriminator'):
+def AAE_build_discriminator(latent_dim=100, name='EMNIST_AAE_discriminator'):
     input_layer = tf.keras.Input(latent_dim)
 
     layers = tf.keras.layers.Flatten()(input_layer)
@@ -55,8 +50,7 @@ def AAE_build_discriminator(latent_dim=100, name='_discriminator'):
     layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
     layers = tf.keras.layers.Dense(256)(layers)
     layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
-    layers = tf.keras.layers.Dense(1)(layers)
-    layers = tf.keras.layers.Activation('sigmoid')(layers)
+    layers = tf.keras.layers.Dense(1, activation='sigmoid')(layers)
 
     model = tf.keras.Model(input_layer, layers, name=name)
     return model
