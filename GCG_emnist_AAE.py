@@ -37,7 +37,7 @@ def AAE_build_decoder(img_shape=(28, 28), latent_dim=100, name='EMNIST_AAE_decod
     layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
     layers = tf.keras.layers.Dense(512)(layers)
     layers = tf.keras.layers.LeakyReLU(alpha=0.2)(layers)
-    layers = tf.keras.layers.Dense(np.prod(img_shape), activation='tanh')(layers)
+    layers = tf.keras.layers.Dense(np.prod(img_shape), activation='sigmoid')(layers)
     layers = tf.keras.layers.Reshape(img_shape)(layers)
 
     model = tf.keras.models.Model(input_layer, layers, name=name)
