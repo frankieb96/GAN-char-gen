@@ -26,12 +26,13 @@ The programs print a warning message that can be ignored.
 At the end, inside the 'temp_project' folder, inside the subfolders are saved the models, 
 training images and training history as a .npz file.
 
+### Some notes
+
 Since it may be desirable to run the programs in parallel, note that:
  - `GCG_emnist_DCGAN.py` and `GCG_mnist_DCGAN.py` are equivalent, and differs only 
    for the default behaviour (the former loads the EMNIST, the latter the MNIST),
    so there are two different files just for convenience.
- - The files `GCG_emnist_AAE.py` and `GCG_mnist_AAE.py`, besides the default behaviour, 
-   also have different networks.
+   Same applies for `GCG_emnist_AAE.py` and `GCG_mnist_AAE.py`.
  - All nets are trained for a default of 15 epochs, and you need to manually change this
    value directly in the code for a different number.
  - At the end, they will show the results.
