@@ -13,8 +13,10 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import GCG_utils
 
+""" ENCODER/DECODER/DISCRIMINATOR MODEL CREATOR FUNCTIONS """
 
-def AAE_build_encoder(img_shape=(28, 28), latent_dimension=100, name='EMNIST_AAE_encoder'):
+
+def AAE_build_encoder(img_shape=(28, 28), latent_dimension=100, name='MNIST_AAE_encoder'):
     encoder_input = tf.keras.layers.Input(img_shape)
 
     encoder_sequence = tf.keras.layers.Flatten()(encoder_input)
@@ -28,7 +30,7 @@ def AAE_build_encoder(img_shape=(28, 28), latent_dimension=100, name='EMNIST_AAE
     return encoder_model
 
 
-def AAE_build_decoder(img_shape=(28, 28), latent_dim=100, name='EMNIST_AAE_decoder'):
+def AAE_build_decoder(img_shape=(28, 28), latent_dim=100, name='MNIST_AAE_decoder'):
     input_layer = tf.keras.Input(latent_dim)
 
     layers = tf.keras.layers.Dense(512, input_dim=latent_dimension)(input_layer)
@@ -42,7 +44,7 @@ def AAE_build_decoder(img_shape=(28, 28), latent_dim=100, name='EMNIST_AAE_decod
     return model
 
 
-def AAE_build_discriminator(latent_dim=100, name='EMNIST_AAE_discriminator'):
+def AAE_build_discriminator(latent_dim=100, name='MNIST_AAE_discriminator'):
     input_layer = tf.keras.Input(latent_dim)
 
     layers = tf.keras.layers.Flatten()(input_layer)

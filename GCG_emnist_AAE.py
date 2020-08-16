@@ -58,7 +58,7 @@ def AAE_build_discriminator(latent_dim=100, name='EMNIST_AAE_discriminator'):
     return model
 
 
-""" ---------------------------------------------------------- """
+""" GLOBAL VARIABLES AND CONSTANTS """
 
 DATA_TYPE = "emnist-letters"
 tf.random.set_seed(1)
