@@ -71,7 +71,8 @@ Examples:
   3. define global variables and constants, among which the latent dimension, batch
      size and number of epochs,
   4. load the chosen dataset and visualize memory occupation; the MNIST is directly 
-     integrated with keras, the EMNIST expects the matlab file version of the dataset,
+     integrated with keras, the EMNIST expects the matlab file version of the dataset
+     in a 'matlab' folder inside the project folder,
   5. build and compile the keras models,
   6. train the model if it does not exist, or load it if instead it does,
   7. visualize plots of losses, accuracies, and some generated images.
