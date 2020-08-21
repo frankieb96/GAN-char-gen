@@ -24,20 +24,20 @@ and 'M_' for MNIST, followed by either 'DCGAN' or 'AAE'.
 The programs print a warning message that can be ignored.
 
 At the end, inside the 'temp_project' folder, inside the subfolders are saved the models, 
-training images and training history as a .npz file.
+training images and training history in `training.npz`.
 
 ### Some notes
 
 Since it may be desirable to run the programs in parallel, note that:
- - `GCG_emnist_DCGAN.py` and `GCG_mnist_DCGAN.py` are equivalent, and differs only 
+ - `GCG_emnist_DCGAN.py` and `GCG_mnist_DCGAN.py` use the same NN architecture, and differs only 
    for the default behaviour (the former loads the EMNIST, the latter the MNIST),
    so there are two different files just for convenience.
    Same applies for `GCG_emnist_AAE.py` and `GCG_mnist_AAE.py`.
  - All nets are trained for a default of 15 epochs, and you need to manually change this
    value directly in the code for a different number.
  - At the end, they will show the results.
- - The programs first search if it exist a folder with the network name (e.g. if it 
-   for this default, he may search for 'E_DCGAN'). If is found, then the training will
+ - The programs first search if it exist a folder with the network name (e.g. if run with
+   this default, it searches for 'E_DCGAN'). If is found, then the training will
    not be repeated: the models are loaded and only the final results are shown. With
    this fashion, if any error arises before the models are saved, you need to manually 
    delete or change name to the folders, otherwise the programs will try to load the 
